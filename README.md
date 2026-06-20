@@ -19,3 +19,4 @@ Initial project setup. Architecture and implementation are in progress.
 
 The planned stack is Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, and Pytest.
 
+### TEST 
