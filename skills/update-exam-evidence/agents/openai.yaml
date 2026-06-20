@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Exam Evidence"
+  short_description: "Record module work for the final exam report"
+  default_prompt: "Use $update-exam-evidence to record the latest completed project work in the exam journal."

@@ -19,4 +19,8 @@ Initial project setup. Architecture and implementation are in progress.
 
 The planned stack is Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, and Pytest.
 
+## Exam evidence workflow
+
+Development evidence is recorded in `docs/exam-journal.md`. The project-local `update-exam-evidence` skill in `skills/update-exam-evidence/` defines when and how to update the journal without modifying the original assignment document.
+
 ### TEST 
