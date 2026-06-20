@@ -33,6 +33,17 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Challenges and learning:** GitHub CLI and browser automation were unavailable, so HTTPS authentication through Git Credential Manager was used for the initial push.
 - **Evidence:** `README.md`, `.gitignore`, `AGENTS.md`, `docs/exam-journal.md`, `skills/update-exam-evidence/`, commit `bb80c9d`, and https://github.com/MariaRHristova/sofia-property-alert
 
+### 2026-06-20 — Repository-wide agent guidance
+
+- **Outcome:** Replaced the minimal agent note with project-specific operating instructions covering role, architecture, repository knowledge, commands, engineering standards, testing, exam evidence, and safety boundaries.
+- **Approach and reasoning:** Adapted GitHub's recommended AGENTS.md starter structure instead of copying its documentation-agent example. Kept commands honest about the repository's pre-scaffold state and made live listing access and real email delivery explicit approval boundaries.
+- **AI-assisted workflow:** Retrieved the linked GitHub Blog template, inspected the current repository and evidence skill, then translated the template's persona, project knowledge, tools, standards, example, and always/ask/never sections to Sofia Property Alert.
+- **AI tool choice:** Codex was used to retrieve and analyze the source article, inspect the workspace, adapt the template, and validate the resulting repository changes.
+- **Key prompts:** “Update the AGENTS.md file based on the blog post using the suggested template on this link: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/”
+- **Validation:** Ran `git diff --check` successfully, reviewed the complete patch, and confirmed that AGENTS.md contains no copied Node/TypeScript commands or unresolved template placeholders.
+- **Challenges and learning:** The standard page reader was blocked, so the article and its exact starter template were retrieved through GitHub Blog's public WordPress API.
+- **Evidence:** `AGENTS.md`, `docs/exam-journal.md`, and the linked GitHub Blog article.
+
 ## Challenges and tool comparison notes
 
 - Repository setup required a fallback from unavailable GitHub CLI/browser automation to Git Credential Manager.
