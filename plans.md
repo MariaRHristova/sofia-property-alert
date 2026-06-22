@@ -21,6 +21,7 @@ Build a local-demo MVP where a user can define real-estate criteria for major Bu
 - Keep `Project-Assignment.docx` unchanged.
 - Maintain this plan in `plans.md`.
 - Keep `docs/exam-journal.md` updated for meaningful milestones.
+- Use `$fullstack-feature` for substantial work spanning backend and UI layers.
 - Normalize repository docs and project naming to `Bulgaria Property Alert`.
 - Create the Python project scaffold and dependency manifest.
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Full-stack Feature"
+  short_description: "Coordinate backend and frontend feature delivery"
+  default_prompt: "Use $fullstack-feature to implement this cross-layer feature with a reconciled API contract and verification."

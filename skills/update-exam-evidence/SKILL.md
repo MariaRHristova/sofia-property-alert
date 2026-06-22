@@ -1,6 +1,6 @@
 ---
 name: update-exam-evidence
-description: Maintain the Sofia Property Alert AI-Assisted Development exam evidence in docs/exam-journal.md. Use after completing or testing a project module, making an important architecture decision, resolving a meaningful challenge, comparing AI tools, or capturing working-system evidence, and before preparing the final 3-6 page Google Drive document. Do not invoke for trivial formatting-only changes.
+description: Maintain the Sofia Property Alert AI-Assisted Development exam evidence in docs/exam-journal.md. Use after completing or testing a project module, making an important architecture decision, adding sub-agents or skills or resolving a meaningful challenge, comparing AI tools, or capturing working-system evidence, and before preparing the final 3-6 page Google Drive document. Do not invoke for trivial formatting-only changes.
 ---
 
 # Update Exam Evidence

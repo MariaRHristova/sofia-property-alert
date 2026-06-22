@@ -83,3 +83,7 @@ Follow these rules for all code and documentation.
 - Always: Preserve existing user changes, keep the MVP scope visible, write tests for new behavior, inspect command results, protect secrets, and update meaningful exam evidence.
 - Ask first: Add or replace dependencies, make destructive database changes, perform live scraping or broad network collection, configure a real email provider, send real emails, alter CI/deployment, or expand the agreed product scope.
 - Never: Modify `Project-Assignment.docx`, bypass CAPTCHA/Cloudflare/access controls, ignore site terms or rate limits, commit credentials or `.env` files, commit local databases, expose subscriber data, fabricate evidence, or claim that unrun tests passed.
+
+## Subagents and full-stack workflow
+
+Use `$fullstack-feature` for features that require coordinated backend and frontend work. Project agents are `backend_engineer`, `frontend_engineer`, and the read-only `integration_reviewer`; avoid subagents for small tasks.
