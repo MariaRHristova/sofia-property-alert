@@ -22,6 +22,20 @@ class ListingCandidate:
     raw_summary: str | None
 
 
+@dataclass(slots=True)
+class ListingSearchCriteria:
+    transaction_type: str
+    property_type: str
+    city: str
+    district: str | None = None
+    min_price_eur: float | None = None
+    max_price_eur: float | None = None
+    rooms: str | None = None
+
+
 class ListingProvider(Protocol):
-    def fetch(self) -> list[ListingCandidate]:
+    def fetch(
+        self,
+        criteria: ListingSearchCriteria | None = None,
+    ) -> list[ListingCandidate]:
         """Return normalized listing candidates from a specific source."""

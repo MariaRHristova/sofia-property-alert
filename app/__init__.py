@@ -1,1 +1,1 @@
-﻿"""Bulgaria Property Alert package."""
+"""Bulgaria Property Alert package."""

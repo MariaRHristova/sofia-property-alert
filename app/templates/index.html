@@ -1,0 +1,559 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ app_name }}</title>
+    <style>
+      :root {
+        --bg: #f4efe8;
+        --paper: #fffdf8;
+        --ink: #1c2430;
+        --muted: #5f6b7a;
+        --line: #d8cfc1;
+        --accent: #0f766e;
+        --accent-strong: #115e59;
+        --warm: #d97706;
+        --danger: #b42318;
+        --shadow: 0 20px 60px rgba(28, 36, 48, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(217, 119, 6, 0.14), transparent 28%),
+          linear-gradient(180deg, #f8f2ea 0%, var(--bg) 48%, #efe7dc 100%);
+      }
+
+      .shell {
+        width: min(1120px, calc(100% - 32px));
+        margin: 0 auto;
+        padding: 32px 0 48px;
+      }
+
+      .hero, .panel, .subscription-card {
+        background: rgba(255, 253, 248, 0.92);
+        border: 1px solid rgba(216, 207, 193, 0.85);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(10px);
+      }
+
+      .hero {
+        border-radius: 28px;
+        padding: 32px;
+        margin-bottom: 24px;
+      }
+
+      .eyebrow {
+        margin: 0 0 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-size: 0.76rem;
+        color: var(--warm);
+      }
+
+      h1, h2, h3 { margin: 0; line-height: 1.05; }
+
+      h1 {
+        font-size: clamp(2.6rem, 5vw, 4.6rem);
+        max-width: 10ch;
+      }
+
+      .hero p {
+        max-width: 58ch;
+        font-size: 1.05rem;
+        color: var(--muted);
+        margin: 18px 0 0;
+      }
+
+      .hero-grid, .content-grid, .form-grid, .metric-grid, .subscription-grid, .listing-grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      .hero-grid {
+        grid-template-columns: 1.4fr 0.8fr;
+        align-items: end;
+      }
+
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      .metric {
+        border-radius: 20px;
+        padding: 18px;
+        background: #f8f4ee;
+        border: 1px solid var(--line);
+      }
+
+      .metric strong {
+        display: block;
+        font-size: 2rem;
+        margin-top: 8px;
+      }
+
+      .content-grid {
+        grid-template-columns: minmax(320px, 420px) 1fr;
+        align-items: start;
+      }
+
+      .panel {
+        border-radius: 24px;
+        padding: 24px;
+      }
+
+      .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+      label {
+        display: grid;
+        gap: 8px;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      label.full { grid-column: 1 / -1; }
+
+      input, select, button {
+        font: inherit;
+      }
+
+      input, select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #fff;
+        color: var(--ink);
+      }
+
+      select[multiple] { min-height: 138px; }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 13px 20px;
+        cursor: pointer;
+      }
+
+      .primary {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+        color: #fff;
+        font-weight: 700;
+      }
+
+      .ghost {
+        background: transparent;
+        border: 1px solid var(--danger);
+        color: var(--danger);
+      }
+
+      .muted-copy {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .flash {
+        min-height: 24px;
+        margin-top: 14px;
+        font-size: 0.95rem;
+      }
+
+      .flash.error { color: var(--danger); }
+      .flash.success { color: var(--accent-strong); }
+
+      .subscription-grid, .listing-grid {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      }
+
+      .subscription-card {
+        border-radius: 24px;
+        padding: 20px;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 14px 0;
+      }
+
+      .pill {
+        padding: 7px 10px;
+        border-radius: 999px;
+        background: #ecf8f6;
+        color: var(--accent-strong);
+        font-size: 0.84rem;
+      }
+
+      .pill.inactive {
+        background: #f2e9e5;
+        color: #8b5e3c;
+      }
+
+      .listing {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px;
+      }
+
+      .listing a { color: inherit; }
+
+      .listing-meta {
+        color: var(--muted);
+        margin: 8px 0 0;
+        font-size: 0.92rem;
+      }
+
+      .empty {
+        padding: 22px;
+        border-radius: 20px;
+        border: 1px dashed var(--line);
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.6);
+      }
+
+      @media (max-width: 880px) {
+        .hero-grid, .content-grid, .form-grid { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <section class="hero">
+        <div class="hero-grid">
+          <div>
+            <p class="eyebrow">Minimal working PoC</p>
+            <h1>Daily property alerts for Bulgaria.</h1>
+            <p>
+              Create a subscription, store it locally, and preview matching listings from the fixture-backed
+              parser before we enable live collection or real email delivery.
+            </p>
+          </div>
+          <div class="metric-grid">
+            <div class="metric">Fixture listings<strong>{{ fixture_sample_count }}</strong></div>
+            <div class="metric">Stored subscriptions<strong>{{ preview_groups | length }}</strong></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>Create a subscription</h2>
+          <p class="muted-copy">
+            This PoC saves the subscription in SQLite and immediately previews which fixture listings match.
+          </p>
+
+          <form id="subscription-form">
+            <div class="form-grid">
+              <label class="full">
+                Email
+                <input name="email" type="email" placeholder="you@example.com" required />
+              </label>
+
+              <label>
+                Transaction type
+                <select name="transaction_type" required>
+                  {% for value, slug in transaction_types.items() %}
+                  <option value="{{ value }}">{{ value | title }} ({{ slug }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+
+              <label>
+                Property type
+                <select name="property_type" required>
+                  {% for value, slug in property_types.items() %}
+                  <option value="{{ value }}">{{ value | title }} ({{ slug }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+
+              <label>
+                City
+                <select name="city" id="city-select" required></select>
+              </label>
+
+              <label>
+                Rooms
+                <select name="rooms">
+                  <option value="">Any</option>
+                  {% for value, slug in room_options.items() %}
+                  <option value="{{ value }}">{{ value }} ({{ slug }})</option>
+                  {% endfor %}
+                </select>
+              </label>
+
+              <label class="full">
+                Preferred districts
+                <select name="districts" id="district-select" multiple></select>
+              </label>
+
+              <label>
+                Minimum price (EUR)
+                <input name="min_price_eur" type="number" min="0" step="1000" />
+              </label>
+
+              <label>
+                Maximum price (EUR)
+                <input name="max_price_eur" type="number" min="0" step="1000" />
+              </label>
+
+              <label class="full">
+                Minimum area (sq.m)
+                <input name="min_area_sqm" type="number" min="0" step="1" />
+              </label>
+            </div>
+
+            <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+              <button class="primary" type="submit">Save subscription</button>
+              <span class="muted-copy">Select multiple districts with Ctrl or Cmd.</span>
+            </div>
+            <div id="flash" class="flash" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h2>Stored subscriptions and preview matches</h2>
+          <p class="muted-copy">
+            Each card below is real persisted data matched against the local fixture provider.
+          </p>
+
+          <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <button id="run-job-button" class="primary" type="button">Run daily job</button>
+            <span class="muted-copy">The scheduler is still manual in this PoC.</span>
+          </div>
+
+          {% if preview_groups %}
+          <div class="subscription-grid">
+            {% for group in preview_groups %}
+            <article class="subscription-card">
+              <h3>{{ group.subscription.city }} • {{ group.subscription.property_type | title }}</h3>
+              <p class="muted-copy">{{ group.subscription.email }}</p>
+              <div class="pill-row">
+                <span class="pill">{{ group.subscription.transaction_type | title }}</span>
+                <span class="pill {% if not group.subscription.active %}inactive{% endif %}">
+                  {% if group.subscription.active %}Active{% else %}Inactive{% endif %}
+                </span>
+                {% if group.subscription.rooms %}<span class="pill">{{ group.subscription.rooms }} rooms</span>{% endif %}
+                {% if group.subscription.min_price_eur %}<span class="pill">From €{{ "%.0f"|format(group.subscription.min_price_eur) }}</span>{% endif %}
+                {% if group.subscription.max_price_eur %}<span class="pill">To €{{ "%.0f"|format(group.subscription.max_price_eur) }}</span>{% endif %}
+              </div>
+              {% if group.subscription.districts %}
+              <p class="muted-copy">Districts: {{ group.subscription.districts | join(", ") }}</p>
+              {% endif %}
+
+              {% if group.matches %}
+              <div class="listing-grid" style="margin-bottom: 12px;">
+                {% for listing in group.matches %}
+                <div class="listing">
+                  <a href="{{ listing.url }}" target="_blank" rel="noreferrer"><strong>{{ listing.title }}</strong></a>
+                  <p class="listing-meta">
+                    {{ listing.city }}{% if listing.district %}, {{ listing.district }}{% endif %}<br />
+                    {% if listing.price_eur %}€{{ "%.0f"|format(listing.price_eur) }}{% else %}Price missing{% endif %}
+                    • {% if listing.area_sqm %}{{ "%.0f"|format(listing.area_sqm) }} sq.m{% else %}Area missing{% endif %}
+                  </p>
+                </div>
+                {% endfor %}
+              </div>
+              {% else %}
+              <div class="empty" style="margin-bottom: 12px;">No fixture listing matches this subscription yet.</div>
+              {% endif %}
+
+              {% if group.subscription.active %}
+              <button
+                class="ghost unsubscribe-button"
+                type="button"
+                data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/unsubscribe"
+              >
+                Unsubscribe
+              </button>
+              {% endif %}
+              <button
+                class="ghost delete-button"
+                type="button"
+                data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}"
+              >
+                Delete permanently
+              </button>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="empty">No subscriptions yet. Create one to see preview matches appear here.</div>
+          {% endif %}
+
+          <section class="panel" style="margin-top: 18px; padding: 18px;">
+            <h3 style="margin-bottom: 12px;">Recent job runs</h3>
+            <div id="job-runs" class="muted-copy">Open the page and run the job to populate the log.</div>
+          </section>
+        </section>
+      </section>
+    </div>
+
+    <script>
+      const cityOptions = {{ city_options_json | safe }};
+      const citySelect = document.getElementById("city-select");
+      const districtSelect = document.getElementById("district-select");
+      const form = document.getElementById("subscription-form");
+      const flash = document.getElementById("flash");
+      const runJobButton = document.getElementById("run-job-button");
+      const jobRuns = document.getElementById("job-runs");
+
+      function renderCities() {
+        citySelect.innerHTML = "";
+        for (const [city, details] of Object.entries(cityOptions)) {
+          const option = document.createElement("option");
+          option.value = city;
+          option.textContent = `${city} (${details.slug})`;
+          citySelect.appendChild(option);
+        }
+      }
+
+      function renderDistricts() {
+        const city = citySelect.value;
+        const districts = cityOptions[city]?.districts || [];
+        districtSelect.innerHTML = "";
+        for (const district of districts) {
+          const option = document.createElement("option");
+          option.value = district;
+          option.textContent = district;
+          districtSelect.appendChild(option);
+        }
+      }
+
+      async function refreshJobRuns() {
+        const response = await fetch("/jobs/recent");
+        const data = await response.json();
+        if (!data.jobs.length) {
+          jobRuns.textContent = "No job runs yet.";
+          return;
+        }
+        jobRuns.innerHTML = data.jobs.map((job) => `
+          <div style="padding: 10px 0; border-top: 1px solid var(--line);">
+            <strong>#${job.id}</strong> ${job.provider} ${job.status}<br />
+            Listings seen: ${job.listings_seen}, matches: ${job.matches_created}, emails: ${job.emails_sent}
+          </div>
+        `).join("");
+      }
+
+      function showMessage(text, type) {
+        flash.textContent = text;
+        flash.className = `flash ${type}`;
+      }
+
+      renderCities();
+      renderDistricts();
+      citySelect.addEventListener("change", renderDistricts);
+      refreshJobRuns();
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        showMessage("Saving subscription...", "success");
+
+        const formData = new FormData(form);
+        const payload = {
+          email: formData.get("email"),
+          transaction_type: formData.get("transaction_type"),
+          property_type: formData.get("property_type"),
+          city: formData.get("city"),
+          districts: Array.from(districtSelect.selectedOptions).map((option) => option.value),
+          min_price_eur: formData.get("min_price_eur") ? Number(formData.get("min_price_eur")) : null,
+          max_price_eur: formData.get("max_price_eur") ? Number(formData.get("max_price_eur")) : null,
+          rooms: formData.get("rooms") || null,
+          min_area_sqm: formData.get("min_area_sqm") ? Number(formData.get("min_area_sqm")) : null,
+        };
+
+        const response = await fetch("/subscriptions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          const firstError = data.errors?.[0]?.msg || data.error || "Could not save the subscription.";
+          showMessage(firstError, "error");
+          return;
+        }
+
+        const data = await response.json();
+        showMessage(`Saved. ${data.preview_match_count} fixture matches found. Reloading...`, "success");
+        window.setTimeout(() => window.location.reload(), 500);
+      });
+
+      runJobButton.addEventListener("click", async () => {
+        try {
+          const response = await fetch("/jobs/run", { method: "POST" });
+          if (!response.ok) {
+            const errorText = await response.text();
+            const fallback = "Could not run the daily job.";
+            showMessage(
+              errorText ? `${fallback} ${errorText}` : fallback,
+              "error",
+            );
+            return;
+          }
+          const data = await response.json();
+          if (data.email_errors?.length) {
+            showMessage(
+              `Daily job finished, but no email was delivered. ${data.email_errors[0]}`,
+              "error",
+            );
+            await refreshJobRuns();
+            return;
+          }
+          if (data.email_backend === "preview") {
+            showMessage(
+              "Daily job finished in preview mode. A local .eml file was created; no email was sent.",
+              "success",
+            );
+            await refreshJobRuns();
+            return;
+          }
+          showMessage(
+            `Daily job finished. ${data.emails_sent} email(s) sent. Reloading...`,
+            "success",
+          );
+          await refreshJobRuns();
+          window.setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+          showMessage(
+            `Could not run the daily job. ${error instanceof Error ? error.message : "Network request failed."}`,
+            "error",
+          );
+        }
+      });
+
+      for (const button of document.querySelectorAll(".unsubscribe-button")) {
+        button.addEventListener("click", async () => {
+          const response = await fetch(button.dataset.url, { method: "POST" });
+          if (!response.ok) {
+            showMessage("Could not unsubscribe this alert.", "error");
+            return;
+          }
+          showMessage("Subscription unsubscribed. Reloading...", "success");
+          window.setTimeout(() => window.location.reload(), 500);
+        });
+      }
+
+      for (const button of document.querySelectorAll(".delete-button")) {
+        button.addEventListener("click", async () => {
+          if (!window.confirm("Permanently delete this subscription and its match history?")) {
+            return;
+          }
+          const response = await fetch(button.dataset.url, { method: "DELETE" });
+          if (!response.ok) {
+            showMessage("Could not delete this subscription.", "error");
+            return;
+          }
+          showMessage("Subscription deleted permanently. Reloading...", "success");
+          window.setTimeout(() => window.location.reload(), 500);
+        });
+      }
+    </script>
+  </body>
+</html>

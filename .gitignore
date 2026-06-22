@@ -19,6 +19,7 @@ venv/
 *.db
 *.sqlite
 *.sqlite3
+*.eml
 
 # IDE and OS files
 .idea/

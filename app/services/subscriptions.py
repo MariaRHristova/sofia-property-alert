@@ -1,0 +1,98 @@
+from __future__ import annotations
+
+import secrets
+from dataclasses import dataclass
+
+from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
+
+from app.models import ListingMatch, Subscription
+from app.schemas import SubscriptionCreate
+
+
+@dataclass(slots=True)
+class SubscriptionView:
+    id: int
+    email: str
+    transaction_type: str
+    property_type: str
+    city: str
+    districts: list[str]
+    min_price_eur: float | None
+    max_price_eur: float | None
+    rooms: str | None
+    min_area_sqm: float | None
+    unsubscribe_token: str
+    active: bool
+    initialized: bool
+
+
+class SubscriptionService:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create_subscription(self, payload: SubscriptionCreate) -> Subscription:
+        subscription = Subscription(
+            email=payload.email,
+            transaction_type=payload.transaction_type,
+            property_type=payload.property_type,
+            city=payload.city,
+            districts=",".join(payload.districts),
+            min_price_eur=payload.min_price_eur,
+            max_price_eur=payload.max_price_eur,
+            rooms=payload.rooms,
+            min_area_sqm=payload.min_area_sqm,
+            unsubscribe_token=secrets.token_urlsafe(24),
+        )
+        self.session.add(subscription)
+        self.session.commit()
+        self.session.refresh(subscription)
+        return subscription
+
+    def list_subscriptions(self) -> list[Subscription]:
+        statement = select(Subscription).order_by(Subscription.created_at.desc())
+        return list(self.session.scalars(statement))
+
+    def deactivate_subscription(self, token: str) -> bool:
+        statement = select(Subscription).where(Subscription.unsubscribe_token == token)
+        subscription = self.session.scalar(statement)
+        if subscription is None:
+            return False
+        subscription.active = False
+        self.session.commit()
+        return True
+
+    def delete_subscription(self, token: str) -> bool:
+        statement = select(Subscription).where(Subscription.unsubscribe_token == token)
+        subscription = self.session.scalar(statement)
+        if subscription is None:
+            return False
+        self.session.execute(
+            delete(ListingMatch).where(
+                ListingMatch.subscription_id == subscription.id
+            )
+        )
+        self.session.delete(subscription)
+        self.session.commit()
+        return True
+
+
+def to_subscription_view(subscription: Subscription) -> SubscriptionView:
+    districts = [
+        value.strip() for value in subscription.districts.split(",") if value.strip()
+    ]
+    return SubscriptionView(
+        id=subscription.id,
+        email=subscription.email,
+        transaction_type=subscription.transaction_type,
+        property_type=subscription.property_type,
+        city=subscription.city,
+        districts=districts,
+        min_price_eur=subscription.min_price_eur,
+        max_price_eur=subscription.max_price_eur,
+        rooms=subscription.rooms,
+        min_area_sqm=subscription.min_area_sqm,
+        unsubscribe_token=subscription.unsubscribe_token,
+        active=subscription.active,
+        initialized=subscription.initialized,
+    )

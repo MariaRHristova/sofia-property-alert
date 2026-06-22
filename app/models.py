@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime, timezone
 
@@ -27,9 +27,7 @@ class Subscription(Base):
     min_area_sqm: Mapped[float | None] = mapped_column(Float, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     initialized: Mapped[bool] = mapped_column(Boolean, default=False)
-    unsubscribe_token: Mapped[str] = mapped_column(
-        String(64), unique=True, index=True
-    )
+    unsubscribe_token: Mapped[str] = mapped_column(String(64), unique=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         default=utc_now,

@@ -1,4 +1,4 @@
-﻿# Bulgaria Property Alert - Exam Journal
+# Bulgaria Property Alert - Exam Journal
 
 This journal contains raw, verified evidence for the AI-Assisted Development exam report. It is intentionally more detailed than the final submission.
 
@@ -12,13 +12,13 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 
 | Module | Status | Strongest evidence |
 | --- | --- | --- |
-| UI and validation | In progress | `app/main.py`, `tests/test_app_routes.py` |
-| Database layer | In progress | `app/models.py`, `app/db.py` |
+| UI and validation | In progress | `app/main.py`, `app/templates/index.html`, `app/schemas.py`, `tests/test_app_routes.py` |
+| Database layer | In progress | `app/models.py`, `app/db.py`, `app/services/subscriptions.py` |
 | Listing provider and parsing | In progress | `app/providers/`, `tests/test_fixture_parser.py` |
-| Matching and deduplication | Not started | TODO |
+| Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
 | Scheduler | Not started | TODO |
-| Email delivery | Not started | TODO |
-| Testing and observability | In progress | `tests/test_fixture_parser.py`, `tests/test_app_routes.py` |
+| Email delivery | In progress | `app/email/delivery.py`, `app/services/jobs.py`, `tests/test_email_digest.py` |
+| Testing and observability | In progress | `tests/conftest.py`, `tests/test_fixture_parser.py`, `tests/test_app_routes.py` |
 
 ## Development log
 
@@ -66,6 +66,61 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Challenges and learning:** The virtual environment lacked PyYAML, so the first skill-validator attempt failed with `ModuleNotFoundError: No module named 'yaml'`; rerunning the same validator with the available Python 3.11 installation succeeded. Windows protected instruction surfaces also rejected the initial sandboxed patch, so the remaining explicitly requested `.agents/`, `AGENTS.md`, and `plans.md` changes were applied through the Codex patch utility with narrowly scoped elevated permission.
 - **Evidence:** `.codex/config.toml`, `.codex/agents/backend-engineer.toml`, `.codex/agents/frontend-engineer.toml`, `.codex/agents/integration-reviewer.toml`, `.agents/skills/fullstack-feature/SKILL.md`, `.agents/skills/fullstack-feature/agents/openai.yaml`, `AGENTS.md`, and `plans.md`. No commit hash or screenshot exists yet for this entry.
 
+### 2026-06-22 - Minimal subscription PoC with fixture preview matching
+
+- **Outcome:** Added a Jinja2 subscription form, SQLite persistence, fixture-backed matching previews, and tokenized unsubscribe.
+- **Approach and reasoning:** Used saved fixture listings to deliver a deterministic vertical slice without live scraping.
+- **AI-assisted workflow:** Codex reconciled the JSON route contract across validation, persistence, matching services, and the homepage.
+- **AI tool choice:** Codex could inspect, edit, and verify the full local stack in one workspace.
+- **Key prompts:** "Ok, we can start implementing the plan using the newly created subagents and skills. Focus on minimal working proof of concept. Test will be done later."
+- **Validation:** Ran `\.\.venv\Scripts\python -m ruff check app tests` successfully and the focused route suite with 3 passing tests.
+- **Challenges and learning:** Two incompatible route variants were reconciled into one JSON contract.
+- **Evidence:** `app/main.py`, `app/catalog.py`, `app/schemas.py`, `app/services/subscriptions.py`, `app/services/preview.py`, `app/templates/index.html`, `tests/test_app_routes.py`
+
+### 2026-06-22 - Daily job runner, digest previews, and delivery diagnostics
+
+- **Outcome:** Added fixture-backed daily job execution, listing/match/job persistence, HTML/text digest previews, configurable SMTP, visible send results, and explicit empty-state email copy.
+- **Approach and reasoning:** Kept rendering separate from delivery and always wrote a local `.eml` preview so email output remains demonstrable without external delivery.
+- **AI-assisted workflow:** Codex built the job and email services, traced a failed Gmail delivery, and updated the API/UI to distinguish preview, success, and delivery errors.
+- **AI tool choice:** Codex combined local diagnostics, a controlled login-only SMTP check, implementation, and automated verification without printing credentials.
+- **Key prompts:** "When I click run daily job, I still I am not receiving an email"; "Ok, add a proper minimal digest page/format for the email and if there are no listings, also send an email with there are no available listings."
+- **Validation:** A login-only check returned Gmail `SMTPAuthenticationError` 5.7.9 and sent no message. Ruff passed; the full Pytest suite passed 10 tests before the deletion feature.
+- **Challenges and learning:** Route tests had inherited the developer `.env` and database. `tests/conftest.py` now uses a temporary SQLite database and preview backend, preventing real SMTP attempts and local data pollution.
+- **Evidence:** `app/email/delivery.py`, `app/services/jobs.py`, `app/main.py`, `app/templates/index.html`, `tests/conftest.py`, `tests/test_email_digest.py`, `tests/test_app_routes.py`
+
+### 2026-06-22 - Permanent subscription deletion and password-free email research
+
+- **Outcome:** Added token-protected permanent subscription deletion in addition to unsubscribe. Deletion removes the subscription and its match history. Cleaned accumulated fixture/test records while preserving one active local subscription.
+- **Approach and reasoning:** Kept handlers thin and placed deletion behavior in `SubscriptionService`; required an explicit browser confirmation for the irreversible UI action. Evaluated Gmail API OAuth 2.0 as the password-free delivery option.
+- **AI-assisted workflow:** Codex inspected local data using redacted categories, performed the approved cleanup, implemented the DELETE contract and UI control, and researched Google OAuth using official documentation.
+- **AI tool choice:** Codex was used for coordinated database, backend, frontend, testing, and documentation work.
+- **Key prompts:** "Ok, I used clean up the test data and make sure the user can delete a subsription, not only unsubscribe. and find another solution where a password is not needed"
+- **Validation:** Focused Ruff checks passed. `tests/test_app_routes.py` passed 7 tests, including deletion after unsubscribe, 404 on repeated deletion, and removal of match history. Full validation passed: Ruff reported no issues and the complete Pytest suite passed 11 tests with one upstream Starlette deprecation warning.
+- **Challenges and learning:** OAuth removes the need to store the Gmail password but still requires a protected client secret and revocable refresh token. Browser automation could not connect, so no screenshot was claimed.
+- **Evidence:** `app/services/subscriptions.py`, `app/main.py`, `app/templates/index.html`, `tests/test_app_routes.py`, `plans.md`, `docs/exam-journal.md`, [Gmail authentication guide](https://developers.google.com/gmail/api/auth/about-auth), [Google OAuth web-server flow](https://developers.google.com/identity/protocols/oauth2/web-server)
+
+### 2026-06-22 - Sofia district labels aligned to the live imot.bg map
+
+- **Outcome:** Updated the Sofia district vocabulary to match the live HTML on `https://www.imot.bg/search/prodazhbi/grad-sofiya`, kept backward compatibility with the older transliterated inputs, and made the imot.bg search URL builder transliterate Bulgarian district names into valid slugs.
+- **Approach and reasoning:** Inspected the live Sofia page with BeautifulSoup, extracted the district names from the SVG map, then normalized the app around those labels instead of the old English-only shortcuts. Kept the existing matcher and database flow intact by adding Sofia-specific alias normalization rather than changing the persistence model.
+- **AI-assisted workflow:** Codex compared the repo parser, catalog, schema validation, and tests against the live Sofia page HTML, then updated the Sofia catalog, parser normalization, and route tests to use the live labels. I corrected an initial UTF-8 encoding mistake while writing the Bulgarian literals and reran verification after the fix.
+- **AI tool choice:** Codex was used with the local `beautifulsoup-parsing` guidance because the work required DOM inspection, live HTML verification, and repository edits in the same workspace.
+- **Key prompts:** "For Sofia the districts are given in the HTML here: https://www.imot.bg/search/prodazhbi/grad-sofiya"
+- **Validation:** Ran a live HTML inspection command against `https://www.imot.bg/search/prodazhbi/grad-sofiya` and confirmed the Sofia map titles were present in the page DOM. Then ran `python -m pytest tests/test_fixture_parser.py tests/test_app_routes.py tests/test_email_digest.py` with 12 passing tests, `python -m pytest` with 12 passing tests, and `python -m ruff check .` with `All checks passed!`.
+- **Challenges and learning:** The Windows shell initially mangled several Bulgarian literals while I was writing the files, which showed up as corrupted text in the parser and tests. Rewriting the touched files in UTF-8-safe form and reformatting the parser resolved the issue without changing the feature design.
+- **Evidence:** `app/catalog.py`, `app/providers/parsers.py`, `app/schemas.py`, `tests/test_fixture_parser.py`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, and the live reference page `https://www.imot.bg/search/prodazhbi/grad-sofiya`.
+
+### 2026-06-22 - JSON-safe validation errors for subscription requests
+
+- **Outcome:** Made the subscription endpoint return JSON-serializable 422 validation errors instead of crashing when a district value fails schema validation.
+- **Approach and reasoning:** The subscribe flow already validated districts in `SubscriptionCreate`, but the raw Pydantic error payload could include non-serializable objects. Wrapping the errors with `jsonable_encoder` keeps the API response stable for browser and test clients.
+- **AI-assisted workflow:** While reproducing the Sofia subscription flow, Codex hit a validation-response crash with a malformed district value, then updated the route error handling and added a regression test that checks the 422 response body.
+- **AI tool choice:** Codex was used because the bug was local, reproducible, and tightly coupled to the FastAPI response layer.
+- **Key prompts:** None; this was discovered during reproduction.
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py tests/test_fixture_parser.py tests/test_email_digest.py` with 13 passing tests and `python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** The failure only appeared when the request validation path was exercised, so the happy-path subscription tests had not exposed it earlier.
+- **Evidence:** `app/main.py`, `tests/test_app_routes.py`, and the verification commands above.
+
 ## Challenges and tool comparison notes
 
 - Repository setup required a fallback from unavailable GitHub CLI/browser automation to Git Credential Manager.
@@ -75,7 +130,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - [ ] Screenshot 1: user-facing workflow
 - [ ] Screenshot 2: email, tests, API result, or job logs
 - [x] Public GitHub repository linked
-- [ ] No secrets or personal data visible
+- [x] No secrets or personal data visible
 
 ## Final report checklist
 
@@ -87,3 +142,36 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - [ ] At least two working-system screenshots are included
 - [ ] Google Drive sharing is set to anyone with the link can view
 - [ ] Total length is three to six pages
+
+### 2026-06-22 - Default email backend switched to SMTP
+
+- **Outcome:** Changed the application default from preview-only email output to SMTP delivery so the daily job now attempts to send real mail unless a developer explicitly overrides the backend for tests or local demos.
+- **Approach and reasoning:** Kept the smallest possible fix at the configuration boundary. The delivery service still writes `.eml` preview files for inspectability, but the default `EMAIL_BACKEND` now matches the production-intent behavior instead of silently stopping at preview mode.
+- **AI-assisted workflow:** Codex inspected the settings object, delivery service, homepage job action, and route tests, then updated the configuration default, `.env.example`, and the affected tests to keep preview mode available only where it is explicitly requested.
+- **AI tool choice:** Codex was used because the change touched config, tests, and runtime behavior in the same local workspace and needed immediate verification.
+- **Key prompts:** "Use @Browser. Open http://http://127.0.0.1:8000/ Reproduce the bug on the page... The message I get is Daily job finished in preview mode. A local .eml file was created; no email was sent. I want to be able send emails, not just locally saving them"; Reconstructed prompt: "Find why the daily job only previews email output and fix it so the app can send emails."
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 9 passing tests with one upstream Starlette deprecation warning. Also ran `git diff --check` successfully; only pre-existing CRLF warnings appeared.
+- **Challenges and learning:** The app still supports preview mode for tests, so the shared settings object had to be controlled carefully with `monkeypatch` to avoid leaking test configuration across cases.
+- **Evidence:** `app/config.py`, `.env.example`, `tests/test_email_digest.py`, `tests/test_app_routes.py`, `docs/exam-journal.md`
+
+### 2026-06-22 - imot.bg parser rewrite with real result-card structure
+
+- **Outcome:** Replaced the synthetic fixture-only scraper with a BeautifulSoup parser that understands real imot.bg listing URLs, deduplicates repeated anchors, skips sponsored `nova-sgrada` content, normalizes Sofia district names, and maps the supplied search URL shape to canonical imot.bg slugs.
+- **Approach and reasoning:** Kept the parser source-agnostic by adding `ListingSearchCriteria` alongside `ListingCandidate`, then split out URL building, anchor parsing, and normalization helpers so the code remains testable and reusable for later live-provider work. I chose a conservative parser that falls back safely when fields are missing instead of assuming every card exposes the same DOM shape.
+- **AI-assisted workflow:** Codex inspected the current provider interface, the existing fake selectors, the real imot.bg search/results pages, and the fixture tests. It then reworked the parser around canonical `/obiava-...` links, added district normalization and search URL construction, refreshed the fixture HTML, and adjusted tests to validate the new normalized output.
+- **AI tool choice:** Codex was used because the change spanned parsing rules, provider interfaces, test fixtures, and verification in one workspace.
+- **Key prompts:** Reconstructed prompt: "Use beautifulsoup-parsing to plan how to implement the search properly. Plan first, implement only after I approve"; "Ok, implement it"
+- **Validation:** Ran `python -m pytest tests/test_fixture_parser.py -q` and fixed two parser issues during iteration. Final verification passed with `3 passed in 0.24s`. Then ran `python -m pytest -q` and the full suite passed with `12 passed in 1.63s`.
+- **Challenges and learning:** The first parser pass overmatched the sponsored `nova-sgrada` block and trimmed the leading digit from the listing ID; both were corrected after seeing the failing tests. The real imot.bg page uses repeated anchors and mixed Bulgarian/Latin text, so normalization is necessary for stable matching.
+- **Evidence:** `app/providers/base.py`, `app/providers/parsers.py`, `app/providers/fixtures.py`, `tests/fixtures/imot_search_sample.html`, `tests/test_fixture_parser.py`, and the test outputs from `python -m pytest tests/test_fixture_parser.py -q` and `python -m pytest -q`.
+
+### 2026-06-22 - imot.bg-aligned search catalog and filter UI
+
+- **Outcome:** Reworked the subscription form and validation layer so the selectable cities, preferred districts, transaction types, property types, and room options align with the imot.bg filter vocabulary used by the search URL builder.
+- **Approach and reasoning:** Introduced a catalog with canonical filter slugs alongside display labels, then updated the FastAPI route context, Jinja template, and request validation to consume the same source of truth. Kept the existing matching layer intact so the change only tightens the vocabulary at the boundary instead of rewriting storage or matching logic.
+- **AI-assisted workflow:** Codex inspected the current catalog, schema validation, homepage template, and parser utilities, then updated the application to render imot.bg-flavored options and keep the generated search URL format in sync with those values.
+- **AI tool choice:** Codex was used because the work crossed validation, view rendering, and parser/search mapping concerns in one local workspace.
+- **Key prompts:** "Yes,do the next step and I want the preffered districts and the cities and the other search criteria to match imot.bg filters and"
+- **Validation:** Ran `python -m pytest -q` and the full suite passed with `12 passed in 1.44s` after the catalog/template refactor.
+- **Challenges and learning:** The first pass needed careful alignment between machine-readable filter values and user-facing labels, especially for cities and room categories. Keeping one canonical catalog in `app/catalog.py` prevented the UI and validation from drifting apart.
+- **Evidence:** `app/catalog.py`, `app/schemas.py`, `app/main.py`, `app/templates/index.html`, `app/providers/parsers.py`, `tests/test_fixture_parser.py`, and the test output from `python -m pytest -q`.

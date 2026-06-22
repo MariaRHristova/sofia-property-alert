@@ -1,4 +1,4 @@
-﻿from functools import lru_cache
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -11,14 +11,20 @@ class Settings(BaseSettings):
     listing_provider: str = "fixture"
     imot_live_enabled: bool = False
     fixture_html_path: str = "tests/fixtures/imot_search_sample.html"
-    email_backend: str = "preview"
+    email_backend: str = "smtp"
     email_preview_dir: str = "var/email-previews"
+    email_from: str = "alerts@example.com"
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_starttls: bool = True
     scheduler_enabled: bool = False
     daily_run_time: str = "08:00"
 
     model_config = SettingsConfigDict(
         env_file=".env",
-        env_file_encoding="utf-8",
+        env_file_encoding="utf-8-sig",
         case_sensitive=False,
     )
 
