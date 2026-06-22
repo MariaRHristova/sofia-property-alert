@@ -32,13 +32,20 @@ def test_create_subscription_rejects_invalid_district() -> None:
     )
 
 
-def test_root_endpoint_renders_poc_page() -> None:
+def test_root_endpoint_renders_property_alert_dashboard() -> None:
     with TestClient(app) as client:
         response = client.get("/")
+        stylesheet_response = client.get("/static/app.css")
 
     assert response.status_code == 200
     assert "Bulgaria Property Alert" in response.text
-    assert "Create a subscription" in response.text
+    assert "Create an alert" in response.text
+    assert 'href="#main-content"' in response.text
+    assert '<main id="main-content">' in response.text
+    assert 'autocomplete="email"' in response.text
+    assert 'role="status"' in response.text
+    assert stylesheet_response.status_code == 200
+    assert "--accent: #0f766e" in stylesheet_response.text
 
 
 def test_root_endpoint_renders_in_live_mode(monkeypatch) -> None:

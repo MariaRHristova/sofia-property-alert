@@ -86,97 +86,163 @@
         .hero-grid, .content-grid, .form-grid { grid-template-columns: 1fr; }
       }
     </style>
+    <meta name="description" content="Create property alerts for homes across Bulgaria and receive new matching listings automatically." />
+    <link rel="stylesheet" href="/static/app.css" />
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="shell">
-      <section class="hero">
+      <header class="site-header">
+        <a class="brand" href="/" aria-label="{{ app_name }} home">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M3 11.25 12 4l9 7.25V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.75Z" />
+              <path d="M8 10.5h8" />
+            </svg>
+          </span>
+          <span><strong>{{ app_name }}</strong><small>Property intelligence</small></span>
+        </a>
+        <nav class="site-nav" aria-label="Dashboard navigation">
+          <a href="#create-alert">Create alert</a>
+          <a href="#automation">Automation</a>
+          <a href="#saved-alerts">Saved alerts</a>
+        </nav>
+      </header>
+
+      <main id="main-content">
+      <section class="hero" aria-labelledby="page-title">
         <div class="hero-grid">
           <div>
-            <p class="eyebrow">Minimal working PoC</p>
-            <h1>Daily property alerts for Bulgaria.</h1>
-            <p>
-              Create a subscription, store it locally, and preview matching listings from the {{ listing_mode_description }}.
+            <p class="eyebrow">
+              <span class="status-dot" aria-hidden="true"></span>
+              {{ listing_mode_label }} connected
             </p>
+            <h1 id="page-title">Your next property, without the daily search.</h1>
+            <p class="hero-copy">
+              Set the location, budget, and property details that matter. We monitor the {{ listing_mode_description }} and keep matching homes in one calm, useful place.
+            </p>
+            <a class="text-link" href="#create-alert">Create your first alert <span aria-hidden="true">&rarr;</span></a>
           </div>
-          <div class="metric-grid">
-            <div class="metric">{{ listing_mode_label }}<strong>{{ listing_count }}</strong></div>
-            <div class="metric">Stored subscriptions<strong>{{ preview_groups | length }}</strong></div>
+          <div class="metric-grid" aria-label="Property alert summary">
+            <div class="metric">
+              <span class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M4 20V9l8-5 8 5v11M8 20v-7h8v7M2 20h20" /></svg>
+              </span>
+              <span>Properties indexed</span>
+              <strong>{{ listing_count }}</strong>
+            </div>
+            <div class="metric">
+              <span class="metric-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" /></svg>
+              </span>
+              <span>Saved property alerts</span>
+              <strong>{{ preview_groups | length }}</strong>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="content-grid">
-        <section class="panel">
-          <h2>Create a subscription</h2>
-          <p class="muted-copy">
-            This PoC saves the subscription in SQLite and immediately previews which listings match.
-          </p>
+        <section class="panel create-alert-panel" id="create-alert" aria-labelledby="create-alert-title">
+          <div class="section-heading">
+            <span class="section-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+            </span>
+            <div>
+              <p class="section-kicker">New property search</p>
+              <h2 id="create-alert-title">Create an alert</h2>
+            </div>
+          </div>
+          <p class="section-intro">Tell us what home you are looking for. We will preview current matches and save the criteria for future searches.</p>
 
           <form id="subscription-form">
-            <div class="form-grid">
+            <fieldset class="form-section">
+              <legend>Contact</legend>
+              <div class="form-grid">
               <label class="full">
-                Email
-                <input name="email" type="email" placeholder="you@example.com" required />
+                <span class="label-text">Email address</span>
+                <input name="email" type="email" placeholder="you@example.com" autocomplete="email" aria-describedby="email-help" required />
+                <span class="field-help" id="email-help">New matches will be prepared for this address.</span>
               </label>
-              <label>
-                Transaction type
-                <select name="transaction_type" required>
-                  {% for value, slug in transaction_types.items() %}
-                  <option value="{{ value }}">{{ value | title }} ({{ slug }})</option>
-                  {% endfor %}
-                </select>
-              </label>
-              <label>
-                Property type
-                <select name="property_type" required>
-                  {% for value, slug in property_types.items() %}
-                  <option value="{{ value }}">{{ value | title }} ({{ slug }})</option>
-                  {% endfor %}
-                </select>
-              </label>
-              <label>
-                City
-                <select name="city" id="city-select" required></select>
-              </label>
-              <label>
-                Rooms
-                <select name="rooms">
-                  <option value="">Any</option>
-                  {% for value, slug in room_options.items() %}
-                  <option value="{{ value }}">{{ value }} ({{ slug }})</option>
-                  {% endfor %}
-                </select>
-              </label>
-              <label class="full">
-                Preferred districts
-                <select name="districts" id="district-select" multiple></select>
-              </label>
-              <label>
-                Minimum price (EUR)
-                <input name="min_price_eur" type="number" min="0" step="1000" />
-              </label>
-              <label>
-                Maximum price (EUR)
-                <input name="max_price_eur" type="number" min="0" step="1000" />
-              </label>
-              <label class="full">
-                Minimum area (sq.m)
-                <input name="min_area_sqm" type="number" min="0" step="1" />
-              </label>
-            </div>
+              </div>
+            </fieldset>
 
-            <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-              <button class="primary" id="subscription-save-button" type="submit" data-default-label="Save subscription" data-busy-label="Searching listings...">Save subscription</button>
-              <span class="muted-copy">Select multiple districts with Ctrl or Cmd.</span>
+            <fieldset class="form-section">
+              <legend>Property</legend>
+              <div class="form-grid">
+                <label>
+                  <span class="label-text">Transaction</span>
+                  <select name="transaction_type" required>
+                    {% for value, slug in transaction_types.items() %}
+                    <option value="{{ value }}">{{ value | title }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                <label>
+                  <span class="label-text">Property type</span>
+                  <select name="property_type" required>
+                    {% for value, slug in property_types.items() %}
+                    <option value="{{ value }}">{{ value | title }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                <label>
+                  <span class="label-text">City</span>
+                  <select name="city" id="city-select" required></select>
+                </label>
+                <label>
+                  <span class="label-text">Rooms</span>
+                  <select name="rooms">
+                    <option value="">Any</option>
+                    {% for value, slug in room_options.items() %}
+                    <option value="{{ value }}">{{ value }}</option>
+                    {% endfor %}
+                  </select>
+                </label>
+                <label class="full">
+                  <span class="label-text">Preferred districts</span>
+                  <select name="districts" id="district-select" aria-describedby="district-help" multiple></select>
+                  <span class="field-help" id="district-help">Choose one or more areas. On desktop, hold Ctrl or Cmd to select several.</span>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="form-section">
+              <legend>Budget and size</legend>
+              <div class="form-grid">
+              <label>
+                <span class="label-text">Minimum price</span>
+                <div class="input-affix"><span>&euro;</span><input name="min_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="150000" /></div>
+              </label>
+              <label>
+                <span class="label-text">Maximum price</span>
+                <div class="input-affix"><span>&euro;</span><input name="max_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="350000" /></div>
+              </label>
+              <label class="full">
+                <span class="label-text">Minimum area</span>
+                <div class="input-affix affix-end"><input name="min_area_sqm" type="number" min="0" step="1" inputmode="numeric" placeholder="70" /><span>m&sup2;</span></div>
+              </label>
+              </div>
+            </fieldset>
+
+            <div class="form-actions">
+              <button class="primary" id="subscription-save-button" type="submit" data-default-label="Create property alert" data-busy-label="Searching properties...">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v18M3 12h18" /></svg>
+                <span>Create property alert</span>
+              </button>
+              <span class="secure-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z" /></svg>
+                Your search stays private
+              </span>
             </div>
-            <div id="flash" class="flash" aria-live="polite"></div>
+            <div id="flash" class="flash" role="status" aria-live="polite" aria-atomic="true"></div>
           </form>
         </section>
 
-        <section class="panel">
-          <div class="scheduler-box">
+        <section class="panel" aria-label="Property alert operations">
+          <div class="scheduler-box" id="automation">
             <h2>Scheduler settings</h2>
-            <p class="muted-copy">Choose one app-wide schedule for the PoC. Later this can become per-user.</p>
+            <p class="muted-copy">Choose one app-wide schedule for automated property searches.</p>
             <form id="scheduler-form">
               <div class="form-grid">
                 <label>
@@ -213,7 +279,7 @@
             </div>
           </div>
 
-          <h2>Stored subscriptions and preview matches</h2>
+          <h2 id="saved-alerts">Stored subscriptions and preview matches</h2>
           <p class="muted-copy">Each card below is real persisted data matched against the current listing source.</p>
 
           <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
@@ -278,6 +344,7 @@
           </section>
         </section>
       </section>
+      </main>
     </div>
 
     <script>
@@ -301,10 +368,10 @@
 
       function renderCities() {
         citySelect.innerHTML = "";
-        for (const [city, details] of Object.entries(cityOptions)) {
+        for (const [city] of Object.entries(cityOptions)) {
           const option = document.createElement("option");
           option.value = city;
-          option.textContent = `${city} (${details.slug})`;
+          option.textContent = city;
           citySelect.appendChild(option);
         }
       }
@@ -350,13 +417,18 @@
       function setBusyState(button, busy, busyLabel) {
         if (!button) return;
         if (busy) {
-          button.dataset.previousLabel = button.textContent.trim();
+          button.dataset.previousHtml = button.innerHTML;
           button.textContent = busyLabel;
           button.disabled = true;
           button.setAttribute("aria-busy", "true");
           return;
         }
-        button.textContent = button.dataset.previousLabel || button.dataset.defaultLabel || button.textContent;
+        if (button.dataset.previousHtml) {
+          button.innerHTML = button.dataset.previousHtml;
+          delete button.dataset.previousHtml;
+        } else {
+          button.textContent = button.dataset.defaultLabel || button.textContent;
+        }
         button.disabled = false;
         button.removeAttribute("aria-busy");
       }
