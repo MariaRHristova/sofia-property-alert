@@ -1,6 +1,6 @@
-# Sofia Property Alert
+# Bulgaria Property Alert
 
-A web application for creating real-estate search criteria for Sofia, Bulgaria and receiving a daily email with newly discovered matching listings.
+A web application for creating real-estate search criteria for cities Bulgaria and receiving a daily email with newly discovered matching listings.
 
 ## Project status
 
