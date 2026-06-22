@@ -97,8 +97,8 @@ def _build_html(
         else f"We found {match_count} matching listings for your alert."
     )
     status_label = "No matches yet" if not has_matches else f"{match_count} matches found"
-    status_bg = "#fff1ed" if not has_matches else "#ccebf3"
-    status_fg = "#a12820" if not has_matches else "#0877a5"
+    status_bg = "#fffaf0"
+    status_fg = "#181717"
     listing_section = _build_listing_rows(matches)
     unsubscribe_cta = ""
     if unsubscribe_url:
@@ -127,16 +127,22 @@ def _build_html(
       </div>
 
       <div style='margin-top:18px;border:2px solid #181717;border-radius:26px;background:#fffef8;padding:22px;box-shadow:8px 8px 0 #ccebf3;'>
-        <div style='display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start;'>
-          <div>
-            <div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Saved search</div>
-            <div style='font-family:Georgia,Times New Roman,serif;font-size:30px;line-height:1;color:#181717;'>{escape(subscription.city)} &middot; {escape(subscription.property_type.title())}</div>
-            <div style='margin-top:8px;color:#5f5a55;line-height:1.6;'>{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
-          </div>
-          <div style='display:inline-flex;align-items:center;border:1.5px solid #181717;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;background:{status_bg};color:{status_fg};'>{escape(status_label)}</div>
-        </div>
+        <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;'>
+          <tr>
+            <td style='vertical-align:top;padding-right:12px;'>
+              <div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Saved search</div>
+              <div style='font-family:Georgia,Times New Roman,serif;font-size:30px;line-height:1;color:#181717;'>{escape(subscription.city)} &middot; {escape(subscription.property_type.title())}</div>
+              <div style='margin-top:8px;color:#5f5a55;line-height:1.6;'>{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
+            </td>
+            <td style='vertical-align:top;text-align:right;'>
+              <span style='display:inline-block;border:1.5px solid #181717;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;background:{status_bg};color:{status_fg};'>{escape(status_label)}</span>
+            </td>
+          </tr>
+        </table>
 
-        <div style='margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;'>{_build_subscription_badges(subscription)}</div>
+        <div style='margin-top:18px;'>
+          {_build_subscription_badges(subscription)}
+        </div>
         {unsubscribe_cta}
       </div>
 
@@ -218,9 +224,9 @@ def _build_listing_rows(matches: list[dict[str, object]]) -> str:
 
 def _badge(label: str, tone: str) -> str:
     styles = {
-        "primary": "background:#181717;color:#fffaf0;border:1.5px solid #181717;",
+        "primary": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
         "neutral": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
-        "accent": "background:#fae2e3;color:#181717;border:1.5px solid #181717;",
+        "accent": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
     }
     return (
         f"<span style='display:inline-flex;align-items:center;border-radius:999px;"

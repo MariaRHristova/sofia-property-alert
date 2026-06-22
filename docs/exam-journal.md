@@ -40,7 +40,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **AI-assisted workflow:** Retrieved the linked GitHub Blog template, inspected the current repository and evidence skill, then translated the template's persona, project knowledge, tools, standards, example, and always/ask/never sections to Sofia Property Alert.
 - **AI tool choice:** Codex was used to retrieve and analyze the source article, inspect the workspace, adapt the template, and validate the resulting repository changes.
 - **Key prompts:** "Update the AGENTS.md file based on the blog post using the suggested template on this link: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/"
-- **Validation:** Ran ` .\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 12 passing tests with one upstream Starlette deprecation warning. Ran `git diff --check`; only pre-existing CRLF warnings appeared.
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.39s`.
 - **Challenges and learning:** The standard page reader was blocked, so the article and its exact starter template were retrieved through GitHub Blog's public WordPress API.
 - **Evidence:** `AGENTS.md`, `docs/exam-journal.md`, and the linked GitHub Blog article.
 
@@ -318,6 +318,41 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **AI-assisted workflow:** Codex inspected the current homepage template, city catalog, scheduler button behavior, and digest builder, then updated the scope messaging, catalog, runtime app title, manual-job UI state, and digest rendering. During readback and focused testing, I caught Windows shell encoding issues affecting district strings and email symbols and corrected them with escaped literals before the final verification pass.
 - **AI tool choice:** Codex was used because the change crossed validation, server-rendered UI, email rendering, configuration, and tests in one local workspace.
 - **Key prompts:** "Ok, I want to fix up some things in the app. I want it to focus on Sofia only..."; "When I click run daily job, the user must know that something is happening..."; "And I want the email templates to macth the UI style."
-- **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scriptsun_pytest_clean.ps1 tests/test_app_routes.py tests/test_email_digest.py -q` and got `13 passed, 1 warning in 2.40s`. Then ran `powershell -ExecutionPolicy Bypass -File .\scriptsun_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Scripts\python -m ruff check .` and got `All checks passed!`.
+- **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts
+un_pytest_clean.ps1 tests/test_app_routes.py tests/test_email_digest.py -q` and got `13 passed, 1 warning in 2.40s`. Then ran `powershell -ExecutionPolicy Bypass -File .\scripts
+un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Scripts\python -m ruff check .` and got `All checks passed!`.
 - **Challenges and learning:** The first focused test run failed for two reasons: one route test had accidentally been rewritten to use a valid Sofia district, and the runtime app title still came from an older local `.env` value. The Windows shell also mangled Cyrillic district names and special characters during an intermediate rewrite, so I switched the catalog and digest code to escaped literals for a stable, encoding-safe result.
 - **Evidence:** `app/catalog.py`, `app/config.py`, `app/main.py`, `app/templates/index.html`, `app/email/delivery.py`, `.env.example`, `README.md`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, and the verified command outputs above.
+
+### 2026-06-23 - Newspaper-style email digest aligned to the calmer Sofia UI
+
+- **Outcome:** Reworked the digest email into a calmer editorial layout with paper tones, serif masthead styling, compact listing rows, and a more newspaper-like reading rhythm so the digest feels closer to a real estate section in a daily paper.
+- **Approach and reasoning:** Mirrored the updated dashboard tone instead of using a generic promotional email. Kept the subscription summary prominent, made the listing rows denser for long digests, and preserved the unsubscribe action inside the email footer so the workflow stays practical.
+- **AI-assisted workflow:** Codex reviewed the current dashboard palette and the email builder, then refactored the digest HTML and text copy to use newspaper-style framing, softer colors, a masthead, editorial labels, and compact listing cards. The unsubscribe button and app delete flow were kept intact.
+- **AI tool choice:** Codex was used because the change required coordinated HTML/email rendering, copywriting, and regression testing in the same repository.
+- **Key prompts:** "I want the email dogest to match the new UI with calm colors and resonating as if the user is getting a newspaper real estate listing."
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 13 passing tests with one upstream Starlette deprecation warning. Ran `git diff --check` successfully.
+- **Challenges and learning:** Email clients vary widely, so the design had to stay legible and compact without depending on advanced CSS features or layout behavior that could break in inboxes.
+- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Inbox-safe digest layout for the newspaper-style email
+
+- **Outcome:** Replaced the flex-based saved-search summary block with a table-based layout so the email renders consistently in inboxes without the status badge overlapping the subscription title.
+- **Approach and reasoning:** Kept the newspaper-like palette and editorial tone, but moved the most fragile part of the layout to table markup because email clients handle tables much more reliably than flexbox. Preserved the unsubscribe button and the compact listing cards.
+- **AI-assisted workflow:** Codex used the user screenshot to identify the broken section, then adjusted only the summary block in the digest HTML and verified the result with the existing digest tests.
+- **AI tool choice:** Codex was used because this was an inbox-rendering fix that needed local code inspection, HTML adjustment, and immediate regression testing.
+- **Key prompts:** "The email looks broken"
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.39s`.
+- **Challenges and learning:** Email rendering remains more conservative than web UI rendering, so visually nice CSS still has to be balanced against what common mail clients actually support.
+- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Unified pill colors in the email digest
+
+- **Outcome:** Made the small pill-style badges in the digest use one shared light color so the saved-search labels, price range, and match count read as one calm visual system.
+- **Approach and reasoning:** Removed the mixed pill colors after the inbox screenshot showed too much contrast between the chips. Kept the editorial newspaper look, but reduced the visual noise by making the badges uniform.
+- **AI-assisted workflow:** Codex compared the rendered digest with the user screenshot, then updated the badge palette and status chip styling in the email HTML and re-ran the email tests.
+- **AI tool choice:** Codex was used because the task was a small rendering refinement that needed code inspection, HTML adjustments, and immediate validation.
+- **Key prompts:** "I want the small bubles to be the same light color in the email"
+- **Validation:** Ran `\.\venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.36s`.
+- **Challenges and learning:** Even when the visual style is simple, email clients render small UI atoms very differently, so consistency matters more than decorative color variety.
+- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
