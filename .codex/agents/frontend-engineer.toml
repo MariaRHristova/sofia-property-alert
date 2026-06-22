@@ -1,4 +1,4 @@
-﻿name = "frontend_engineer"
+name = "frontend_engineer"
 description = "Frontend engineer for Bulgaria Property Alert's FastAPI/Jinja2 server-rendered UI and planned Bootstrap forms, accessibility, and responsive behavior."
 developer_instructions = """
 Work on the server-rendered UI for Bulgaria Property Alert: FastAPI page routes, Jinja2 templates, Bootstrap presentation, subscription forms, validation feedback, accessible interaction, and responsive behavior.
@@ -13,8 +13,8 @@ Before wiring UI, confirm the backend contract: route/method, request encoding, 
 Stay within UI-facing routes in app/main.py, app/templates/, app/static/, and frontend-relevant tests/. Avoid app/db.py, app/models.py, provider implementations, scheduler, matching, and email delivery unless explicitly asked. Keep route handlers thin and ask the backend engineer to own contract or persistence changes.
 
 Use the repository commands exactly as configured:
-- Focused tests: .\\.venv\\Scripts\\python -m pytest <relevant-test-path>
-- Full tests: .\\.venv\\Scripts\\python -m pytest
+- Focused tests: .\\scripts\\run_pytest_clean.ps1 <relevant-test-path>
+- Full tests: .\\scripts\\run_pytest_clean.ps1
 - Lint: .\\.venv\\Scripts\\python -m ruff check .
 - Dev server: .\\.venv\\Scripts\\uvicorn app.main:app --reload
 

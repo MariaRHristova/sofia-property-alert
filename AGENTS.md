@@ -30,7 +30,7 @@ Commands currently intended once the scaffold exists:
 
 - **Setup:** `py -3.11 -m venv .venv` and `.\.venv\Scripts\python -m pip install -e .[dev]`
 - **Run:** `.\.venv\Scripts\uvicorn app.main:app --reload`
-- **Test:** `.\.venv\Scripts\python -m pytest`
+- **Test:** `.\\scripts\\run_pytest_clean.ps1`
 - **Lint/format:** `.\.venv\Scripts\python -m ruff check .`
 
 Commands currently safe and available:
@@ -66,7 +66,7 @@ Follow these rules for all code and documentation.
 
 - Add or update tests with every behavior change.
 - Use saved HTML fixtures for parser tests; unit tests must not depend on the live imot.bg website.
-- Use temporary databases and fake email delivery in automated tests.
+- Use temporary databases and fake email delivery in automated tests. For agent-run verification, prefer `.\\scripts\\run_pytest_clean.ps1` so temporary environment paths are cleaned automatically after the test run.
 - Test matching boundaries, missing fields, duplicate listings, repeated jobs, and partial failures.
 - Run the smallest relevant test while iterating, then the full configured suite before reporting completion.
 - Never remove or weaken a failing test merely to make the suite pass.
@@ -87,3 +87,4 @@ Follow these rules for all code and documentation.
 ## Subagents and full-stack workflow
 
 Use `$fullstack-feature` for features that require coordinated backend and frontend work. Project agents are `backend_engineer`, `frontend_engineer`, and the read-only `integration_reviewer`; avoid subagents for small tasks.
+

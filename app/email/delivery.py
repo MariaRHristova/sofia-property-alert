@@ -105,7 +105,7 @@ def _build_html(
       <div style=\"margin-top:18px;background:#ffffff;border:1px solid #dbe3ef;border-radius:24px;padding:22px;box-shadow:0 12px 32px rgba(15,23,42,0.08);\">
         <div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start;\">
           <div>
-            <div style=\"font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:6px;\">Subscription</div>
+            <div style=\"font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#64748b;margin-bottom:3px;\">Subscription</div>
             <div style=\"font-size:20px;font-weight:700;color:#0f172a;\">{escape(subscription.city)} · {escape(subscription.property_type.title())}</div>
             <div style=\"margin-top:6px;color:#475569;line-height:1.6;\">{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
           </div>
@@ -151,7 +151,7 @@ def _build_subscription_badges(subscription: SubscriptionView) -> str:
 def _build_listing_cards(matches: list[dict[str, object]]) -> str:
     if not matches:
         return (
-            '<div style="background:#ffffff;border:1px dashed #cbd5e1;border-radius:20px;padding:18px;color:#64748b;line-height:1.7;">'
+            '<div style="background:#ffffff;border:1px dashed #cbd5e1;border-radius:20px;padding:14px 16px;color:#64748b;line-height:1.6;font-size:14px;">'
             'No listings matched this subscription today. We will keep monitoring and send the next digest when a fit appears.'
             '</div>'
         )
@@ -166,15 +166,15 @@ def _build_listing_cards(matches: list[dict[str, object]]) -> str:
         price = _format_currency(match.get("price_eur"))
         area = _format_number(match.get("area_sqm"))
         cards.append(
-            f'''<div style="background:#ffffff;border:1px solid #dbe3ef;border-radius:22px;padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06);">
+            f'''<div style="background:#ffffff;border:1px solid #dbe3ef;border-radius:16px;padding:12px 14px 10px;margin-bottom:8px;box-shadow:0 6px 16px rgba(15,23,42,0.05);">
   <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
     <div style="min-width:0;">
-      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Listing {index}</div>
-      <div style="font-size:18px;font-weight:700;line-height:1.35;color:#0f172a;margin-bottom:8px;"><a href="{url}" style="color:#0f172a;text-decoration:none;">{title}</a></div>
-      <div style="color:#475569;line-height:1.7;">{city}{district_text}</div>
+      <div style="font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#64748b;margin-bottom:3px;">Listing {index}</div>
+      <div style="font-size:15px;font-weight:700;line-height:1.25;color:#0f172a;margin-bottom:3px;"><a href="{url}" style="color:#0f172a;text-decoration:none;">{title}</a></div>
+      <div style="color:#475569;line-height:1.35;">{city}{district_text}</div>
     </div>
     <div style="text-align:right;white-space:nowrap;">
-      <div style="display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;margin-bottom:8px;">€{price}</div>
+      <div style="display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;margin-bottom:4px;">€{price}</div>
       <div style="display:block;color:#64748b;font-size:13px;">{area} sq.m</div>
     </div>
   </div>
