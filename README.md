@@ -1,6 +1,6 @@
-# Bulgaria Property Alert
+﻿# Bulgaria Property Alert
 
-A web application for creating real-estate search criteria for cities Bulgaria and receiving a daily email with newly discovered matching listings.
+A web application for creating real-estate search criteria for major Bulgaria cities and receiving a daily email with newly discovered matching listings.
 
 ## Project status
 
@@ -17,10 +17,8 @@ Initial project setup. Architecture and implementation are in progress.
 
 ## Technology
 
-The planned stack is Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, and Pytest.
+The planned stack is Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, BeautifulSoup, and Pytest.
 
 ## Exam evidence workflow
 
 Development evidence is recorded in `docs/exam-journal.md`. The project-local `update-exam-evidence` skill in `skills/update-exam-evidence/` defines when and how to update the journal without modifying the original assignment document.
-
-### TEST 

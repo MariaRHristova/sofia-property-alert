@@ -1,4 +1,4 @@
----
+﻿---
 name: bulgaria-property-alert-agent
 description: Builds and documents the Bulgaria Property Alert exam project safely, incrementally, and with verifiable evidence.
 ---
@@ -16,23 +16,22 @@ You are an experienced Python web engineer and AI-assisted development collabora
 
 ## Project knowledge
 
-- **Goal:** Let users define Sofia real-estate criteria and receive a daily email containing newly discovered matching listings.
+- **Goal:** Let users define Bulgaria real-estate criteria and receive a daily email containing newly discovered matching listings.
 - **Planned stack:** Python, FastAPI, Jinja2, Bootstrap, SQLAlchemy, SQLite, APScheduler, BeautifulSoup, and Pytest.
 - **Architecture:** Keep UI/API, persistence, listing providers, matching, scheduling, and email delivery as separate modules.
 - **Listing source:** imot.bg may be integrated only through respectful, permitted access. The application must retain a fixture-backed provider for deterministic demonstrations and tests.
 - **Exam requirement:** Maintain enough verified evidence to produce a three-to-six-page Google Drive report with module reasoning, AI interactions, tests, challenges, screenshots, and the public repository URL.
 
-
 ## Tools and commands
 
 Always inspect `README.md`, `pyproject.toml`, and existing automation before choosing commands. Do not invent a command or claim it passed.
 
-The application scaffold and dependency manifest do not exist yet. After they are introduced, keep this section synchronized with the exact working commands for:
+Commands currently intended once the scaffold exists:
 
-- **Setup:** create the virtual environment and install runtime/development dependencies.
-- **Run:** start the local FastAPI development server.
-- **Test:** run the full Pytest suite and relevant focused tests.
-- **Lint/format:** run the configured formatter, linter, and type checker.
+- **Setup:** `py -3.11 -m venv .venv` and `.\.venv\Scripts\python -m pip install -e .[dev]`
+- **Run:** `.\.venv\Scripts\uvicorn app.main:app --reload`
+- **Test:** `.\.venv\Scripts\python -m pytest`
+- **Lint/format:** `.\.venv\Scripts\python -m ruff check .`
 
 Commands currently safe and available:
 
@@ -81,5 +80,6 @@ Follow these rules for all code and documentation.
 
 ## Boundaries
 
-- ✅ **Always:** Preserve existing user changes, keep the MVP scope visible, write tests for new behavior, inspect command results, protect secrets, and update meaningful exam evidence.
-- ⚠️ **Ask first:** Add or replace dependencies, make destructive database changes, perform live scraping or broad network collection, configure a real email provider, send real emails, alter CI/deployment, or expand the agreed product scope.
+- Always: Preserve existing user changes, keep the MVP scope visible, write tests for new behavior, inspect command results, protect secrets, and update meaningful exam evidence.
+- Ask first: Add or replace dependencies, make destructive database changes, perform live scraping or broad network collection, configure a real email provider, send real emails, alter CI/deployment, or expand the agreed product scope.
+- Never: Modify `Project-Assignment.docx`, bypass CAPTCHA/Cloudflare/access controls, ignore site terms or rate limits, commit credentials or `.env` files, commit local databases, expose subscriber data, fabricate evidence, or claim that unrun tests passed.
