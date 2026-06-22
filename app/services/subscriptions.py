@@ -54,31 +54,53 @@ class SubscriptionService:
         return list(self.session.scalars(statement))
 
     def deactivate_subscription(self, token: str) -> bool:
-        return self._remove_subscription(token)
-
-    def delete_subscription(self, token: str) -> bool:
-        return self._remove_subscription(token)
-
-    def _remove_subscription(self, token: str) -> bool:
-        statement = select(Subscription).where(Subscription.unsubscribe_token == token)
-        subscription = self.session.scalar(statement)
+        subscription = self._get_subscription(token)
         if subscription is None:
             return False
+        self._remove_subscription_matches(subscription.id)
+        subscription.active = False
+        self.session.commit()
+        return True
+
+    def reactivate_subscription(self, token: str) -> Subscription | None:
+        subscription = self._get_subscription(token)
+        if subscription is None:
+            return None
+        subscription.active = True
+        self.session.commit()
+        self.session.refresh(subscription)
+        return subscription
+
+    def delete_subscription(self, token: str) -> bool:
+        subscription = self._get_subscription(token)
+        if subscription is None:
+            return False
+        self._remove_subscription_matches(subscription.id)
+        self.session.delete(subscription)
+        self.session.flush()
+        self._delete_orphan_listings()
+        self.session.commit()
+        return True
+
+    def _get_subscription(self, token: str) -> Subscription | None:
+        statement = select(Subscription).where(Subscription.unsubscribe_token == token)
+        return self.session.scalar(statement)
+
+    def _remove_subscription_matches(self, subscription_id: int) -> None:
         self.session.execute(
             delete(ListingMatch).where(
-                ListingMatch.subscription_id == subscription.id
+                ListingMatch.subscription_id == subscription_id
             )
         )
         self.session.flush()
-        self.session.delete(subscription)
-        self.session.flush()
+        self._delete_orphan_listings()
+
+    def _delete_orphan_listings(self) -> None:
         self.session.execute(
             delete(Listing).where(
                 ~Listing.id.in_(select(ListingMatch.listing_id))
             )
         )
-        self.session.commit()
-        return True
 
 
 def to_subscription_view(subscription: Subscription) -> SubscriptionView:

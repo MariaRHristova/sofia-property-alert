@@ -308,7 +308,15 @@
             </div>
 
             <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-              <button class="primary" type="submit">Save subscription</button>
+              <button
+                class="primary"
+                id="subscription-save-button"
+                type="submit"
+                data-default-label="Save subscription"
+                data-busy-label="Searching listings..."
+              >
+                Save subscription
+              </button>
               <span class="muted-copy">Select multiple districts with Ctrl or Cmd.</span>
             </div>
             <div id="flash" class="flash" aria-live="polite"></div>
@@ -363,13 +371,13 @@
               {% endif %}
 
               {% if group.subscription.active %}
-              <button
-                class="ghost unsubscribe-button"
-                type="button"
-                data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/unsubscribe"
-              >
-                Unsubscribe
-              </button>
+              <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/unsubscribe" data-method="POST">
+                <button class="ghost unsubscribe-button" type="submit">Unsubscribe</button>
+              </form>
+              {% else %}
+              <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/subscribe" data-method="POST">
+                <button class="primary resubscribe-button" type="submit">Subscribe again</button>
+              </form>
               {% endif %}
               <button
                 class="ghost delete-button"
@@ -399,6 +407,7 @@
       const districtSelect = document.getElementById("district-select");
       const form = document.getElementById("subscription-form");
       const flash = document.getElementById("flash");
+      const subscriptionSaveButton = document.getElementById("subscription-save-button");
       const runJobButton = document.getElementById("run-job-button");
       const jobRuns = document.getElementById("job-runs");
 
@@ -444,6 +453,25 @@
         flash.className = `flash ${type}`;
       }
 
+      function setBusyState(button, busy, busyLabel) {
+        if (!button) {
+          return;
+        }
+        if (busy) {
+          button.dataset.previousLabel = button.textContent.trim();
+          button.textContent = busyLabel;
+          button.disabled = true;
+          button.setAttribute("aria-busy", "true");
+          return;
+        }
+        button.textContent =
+          button.dataset.previousLabel ||
+          button.dataset.defaultLabel ||
+          button.textContent;
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+      }
+
       renderCities();
       renderDistricts();
       citySelect.addEventListener("change", renderDistricts);
@@ -451,37 +479,54 @@
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        showMessage("Saving subscription...", "success");
+        setBusyState(
+          subscriptionSaveButton,
+          true,
+          subscriptionSaveButton?.dataset.busyLabel || "Searching listings...",
+        );
+        showMessage("Searching listings for your selected criteria...", "success");
 
-        const formData = new FormData(form);
-        const payload = {
-          email: formData.get("email"),
-          transaction_type: formData.get("transaction_type"),
-          property_type: formData.get("property_type"),
-          city: formData.get("city"),
-          districts: Array.from(districtSelect.selectedOptions).map((option) => option.value),
-          min_price_eur: formData.get("min_price_eur") ? Number(formData.get("min_price_eur")) : null,
-          max_price_eur: formData.get("max_price_eur") ? Number(formData.get("max_price_eur")) : null,
-          rooms: formData.get("rooms") || null,
-          min_area_sqm: formData.get("min_area_sqm") ? Number(formData.get("min_area_sqm")) : null,
-        };
+        try {
+          const formData = new FormData(form);
+          const payload = {
+            email: formData.get("email"),
+            transaction_type: formData.get("transaction_type"),
+            property_type: formData.get("property_type"),
+            city: formData.get("city"),
+            districts: Array.from(districtSelect.selectedOptions).map((option) => option.value),
+            min_price_eur: formData.get("min_price_eur") ? Number(formData.get("min_price_eur")) : null,
+            max_price_eur: formData.get("max_price_eur") ? Number(formData.get("max_price_eur")) : null,
+            rooms: formData.get("rooms") || null,
+            min_area_sqm: formData.get("min_area_sqm") ? Number(formData.get("min_area_sqm")) : null,
+          };
 
-        const response = await fetch("/subscriptions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+          const response = await fetch("/subscriptions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
 
-        if (!response.ok) {
+          if (!response.ok) {
+            const data = await response.json();
+            const firstError = data.errors?.[0]?.msg || data.error || "Could not save the subscription.";
+            showMessage(firstError, "error");
+            setBusyState(subscriptionSaveButton, false);
+            return;
+          }
+
           const data = await response.json();
-          const firstError = data.errors?.[0]?.msg || data.error || "Could not save the subscription.";
-          showMessage(firstError, "error");
-          return;
+          showMessage(
+            `Saved. Searching complete. ${data.preview_match_count} matching listings found. Reloading...`,
+            "success",
+          );
+          window.setTimeout(() => window.location.reload(), 500);
+        } catch (error) {
+          showMessage(
+            `Could not save the subscription. ${error instanceof Error ? error.message : "Network request failed."}`,
+            "error",
+          );
+          setBusyState(subscriptionSaveButton, false);
         }
-
-        const data = await response.json();
-        showMessage(`Saved. ${data.preview_match_count} matching listings found. Reloading...`, "success");
-        window.setTimeout(() => window.location.reload(), 500);
       });
 
       runJobButton.addEventListener("click", async () => {
@@ -527,14 +572,38 @@
         }
       });
 
-      for (const button of document.querySelectorAll(".unsubscribe-button")) {
-        button.addEventListener("click", async () => {
-          const response = await fetch(button.dataset.url, { method: "POST" });
+      for (const form of document.querySelectorAll(".subscription-action-form")) {
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const actionButton = form.querySelector("button");
+          const isReactivate = form.dataset.url?.includes("/subscribe");
+          setBusyState(
+            actionButton,
+            true,
+            isReactivate ? "Searching again..." : "Unsubscribing...",
+          );
+          showMessage(
+            isReactivate
+              ? "Reactivating the alert and searching based on your criteria..."
+              : "Unsubscribing and clearing the current matches...",
+            "success",
+          );
+          const response = await fetch(form.dataset.url, {
+            method: form.dataset.method || "POST",
+          });
           if (!response.ok) {
-            showMessage("Could not unsubscribe this alert.", "error");
+            const failedAction = isReactivate
+              ? "subscribe again"
+              : "unsubscribe this alert";
+            showMessage(`Could not ${failedAction}.`, "error");
+            setBusyState(actionButton, false);
             return;
           }
-          showMessage("Subscription unsubscribed. Reloading...", "success");
+          const data = await response.json();
+          const message = isReactivate
+            ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...`
+            : "Subscription unsubscribed. Reloading...";
+          showMessage(message, "success");
           window.setTimeout(() => window.location.reload(), 500);
         });
       }

@@ -210,3 +210,36 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`. Verified the running localhost app on port `8004` returned `201` for a live subscription save, showed `preview_match_count: 15`, cleared the empty-state message, returned `200` on delete, and left `remaining_matches: 0` for the deleted subscription.
 - **Challenges and learning:** The local environment had a proxy configuration that `httpx` was honoring, which caused the live search fetch to fail even though direct shell requests to imot.bg worked. Disabling inherited proxy settings for this provider made the live path consistent with the rest of the app.
 - **Evidence:** `app/main.py`, `app/services/listings.py`, `app/services/subscriptions.py`, `docs/exam-journal.md`, and the verified localhost HTTP results.
+
+### 2026-06-22 - Unsubscribe now removes alert data and allows fresh resubscribe
+
+- **Outcome:** Changed unsubscribe to remove the subscription together with its matches and orphaned listings, so the homepage updates immediately when a user clicks unsubscribe. The same email can then create a fresh subscription again without being blocked by stale alert state.
+- **Approach and reasoning:** The previous unsubscribe flow only flipped the `active` flag, which left the alert visible in the UI and kept its stored listings around. I unified the unsubscribe and delete cleanup paths so both remove the subscription record and then prune orphan listings after the match rows are cleared.
+- **AI-assisted workflow:** Codex inspected the current unsubscribe flow, refactored the subscription service so unsubscribe and delete share the same cleanup helper, updated the route test to prove cleanup happens before a resubscribe can reuse SQLite ids, and reran the full suite.
+- **AI tool choice:** Codex was used because the change crossed persistence, UI state, and regression tests in one workspace.
+- **Key prompts:** "Ok, I want when the user clicks unsibscribe the live listings to be updated accordingly and I want as well, when I hit unsubscribe to be able to subscribe again."
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** SQLite can reuse deleted primary keys when a user subscribes again immediately, so the regression test had to check the old subscription's cleanup before creating the new one. That made the assertion match the actual behavior instead of an incidental row-id detail.
+- **Evidence:** `app/services/subscriptions.py`, `tests/test_app_routes.py`, `docs/exam-journal.md`, and the verified command outputs above.
+
+### 2026-06-22 - Unsubscribe now supports reactivation from the card
+
+- **Outcome:** Changed unsubscribe so it pauses the alert in place, clears its current matches and orphaned listings, and shows a `Subscribe again` button on the card. Reactivating the same alert now reuses the saved criteria and repopulates preview matches immediately.
+- **Approach and reasoning:** The previous unsubscribe behavior removed the entire subscription, which made it impossible to bring the same alert back from the UI. I split the pause and permanent-delete paths so unsubscribe keeps the record for reactivation while delete still removes the alert completely.
+- **AI-assisted workflow:** Codex updated the subscription service, added a reactivate route, wired the inactive-state button in the Jinja template, and tightened the route regression test to prove unsubscribe, cleanup, and reactivation all work together.
+- **AI tool choice:** Codex was used because the change spans persistence, request handling, rendered UI, and regression coverage.
+- **Key prompts:** "When I click unsubscribet the live listings count is not updated and there is not a button subscribe again"
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** SQLite can reuse primary keys after deletion, so the regression test checks the unsubscribed state before creating the new alert. That avoids confusing reactivation with a fresh record id.
+- **Evidence:** `app/services/subscriptions.py`, `app/main.py`, `app/templates/index.html`, `tests/test_app_routes.py`, `docs/exam-journal.md`, and the verified command outputs above.
+
+### 2026-06-22 - Save and reactivation buttons now show search progress
+
+- **Outcome:** Improved the subscription form and inactive-card action so users can see that the app is actively searching with their criteria. The save button now switches to a busy state while the live preview is loading, and the reactivation button shows it is searching again before the page reloads.
+- **Approach and reasoning:** The prior UI only showed a generic success flash after the request completed, which made the interface feel unresponsive. I added button-level busy labels plus explicit status text that mentions the user?s selected criteria, so the app communicates that work is happening immediately after the click.
+- **AI-assisted workflow:** Codex updated the Jinja/JavaScript interaction layer, kept the backend contract unchanged, and reran the route suite plus the full test suite after the UI edits.
+- **AI tool choice:** Codex was used because the change was a UI behavior refinement that had to stay aligned with the existing backend routes and tests.
+- **Key prompts:** "The subscribe again button is not very responsive. I want the user to know that the app is searcihng based on the criteria and also when I hit the button save suscription, I also want to user to know that something is happening"
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** The main risk was making the UI feel busy without breaking the request flow. Using disabled buttons with explicit labels kept the feedback visible while preserving the existing reload-based navigation.
+- **Evidence:** `app/templates/index.html`, `docs/exam-journal.md`, and the verified command outputs above.

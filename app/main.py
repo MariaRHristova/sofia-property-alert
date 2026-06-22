@@ -137,6 +137,36 @@ def unsubscribe_subscription(token: str) -> JSONResponse:
     return JSONResponse(status_code=200, content={"status": "unsubscribed"})
 
 
+@app.post("/subscriptions/{token}/subscribe")
+def subscribe_subscription(token: str) -> JSONResponse:
+    with SessionLocal() as session:
+        service = SubscriptionService(session)
+        subscription = service.reactivate_subscription(token)
+        if subscription is None:
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Subscription not found."},
+            )
+        subscription_view = to_subscription_view(subscription)
+        preview = build_preview(
+            subscription_view,
+            load_listings_for_subscription(subscription_view, settings),
+        )
+        job_service = JobService(session)
+        job_service.persist_subscription_preview(
+            subscription.id,
+            preview.matches,
+        )
+
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "subscribed",
+            "preview_match_count": len(preview.matches),
+        },
+    )
+
+
 @app.delete("/subscriptions/{token}")
 def delete_subscription(token: str) -> JSONResponse:
     with SessionLocal() as session:

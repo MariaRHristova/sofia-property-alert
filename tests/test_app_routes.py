@@ -74,13 +74,13 @@ def test_create_subscription_returns_preview_count() -> None:
     assert "Delete permanently" in page_response.text
 
 
-def test_unsubscribe_removes_it_and_allows_resubscribe(monkeypatch) -> None:
+def test_unsubscribe_can_reactivate_subscription(monkeypatch) -> None:
     payload = {
         "email": "delete@example.com",
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["??????????????"],
+        "districts": ["\u041b\u043e\u0437\u0435\u043d\u0435\u0446"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",
@@ -92,7 +92,9 @@ def test_unsubscribe_removes_it_and_allows_resubscribe(monkeypatch) -> None:
         create_response = client.post("/subscriptions", json=payload)
         subscription_id = create_response.json()["id"]
         unsubscribe_url = create_response.json()["unsubscribe_url"]
-        delete_url = unsubscribe_url.removesuffix("/unsubscribe")
+        subscribe_again_url = (
+            unsubscribe_url.removesuffix("/unsubscribe") + "/subscribe"
+        )
         client.post("/jobs/run")
         with main_module.SessionLocal() as session:
             match_count = session.scalar(
@@ -101,25 +103,31 @@ def test_unsubscribe_removes_it_and_allows_resubscribe(monkeypatch) -> None:
                 .where(ListingMatch.subscription_id == subscription_id)
             )
         unsubscribe_response = client.post(unsubscribe_url)
-        resubscribe_response = client.post("/subscriptions", json=payload)
-        delete_response = client.delete(delete_url)
+        with main_module.SessionLocal() as session:
+            remaining_matches = session.scalar(
+                select(func.count())
+                .select_from(ListingMatch)
+                .where(ListingMatch.subscription_id == subscription_id)
+            )
+            remaining_listings = session.scalar(
+                select(func.count()).select_from(Listing)
+            )
+        inactive_page_response = client.get("/")
+        reactivate_response = client.post(subscribe_again_url)
         page_response = client.get("/")
 
     assert match_count == 1
     assert unsubscribe_response.status_code == 200
     assert unsubscribe_response.json() == {"status": "unsubscribed"}
-    assert resubscribe_response.status_code == 201
-    assert delete_response.status_code == 404
-    assert payload["email"] in page_response.text
-    with main_module.SessionLocal() as session:
-        remaining_matches = session.scalar(
-            select(func.count())
-            .select_from(ListingMatch)
-            .where(ListingMatch.subscription_id == subscription_id)
-        )
-        remaining_listings = session.scalar(select(func.count()).select_from(Listing))
     assert remaining_matches == 0
     assert remaining_listings == 0
+    assert "Subscribe again" in inactive_page_response.text
+    assert reactivate_response.status_code == 200
+    assert reactivate_response.json()["status"] == "subscribed"
+    assert reactivate_response.json()["preview_match_count"] >= 0
+    assert payload["email"] in page_response.text
+    assert "Subscribe again" not in page_response.text
+    assert "Unsubscribe" in page_response.text
 
 
 def test_job_run_records_job_summary(monkeypatch) -> None:
