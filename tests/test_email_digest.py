@@ -31,7 +31,40 @@ def test_build_digest_uses_clear_empty_state_copy() -> None:
     assert "No available listings in Sofia" in digest.subject
     assert "There are no available listings" in digest.text
     assert "Criteria: Sofia, sale, apartment" in digest.text
-    assert "There are no available listings" in digest.html
+    assert "Subscription" in digest.html
+    assert "No matches yet" in digest.html
+    assert "Matched listings" in digest.html
+
+
+def test_build_digest_renders_distinct_listing_cards() -> None:
+    digest = build_digest(
+        make_subscription(),
+        [
+            {
+                "title": "Lozenets skyline apartment",
+                "url": "https://example.com/1",
+                "city": "Sofia",
+                "district": "Lozenets",
+                "price_eur": 245000,
+                "area_sqm": 84,
+            },
+            {
+                "title": "Central family flat",
+                "url": "https://example.com/2",
+                "city": "Sofia",
+                "district": None,
+                "price_eur": 198000,
+                "area_sqm": 72,
+            },
+        ],
+    )
+
+    assert "Listing 1" in digest.html
+    assert "Listing 2" in digest.html
+    assert "Lozenets skyline apartment" in digest.html
+    assert "Central family flat" in digest.html
+    assert "245 000" in digest.html
+    assert "198 000" in digest.html
 
 
 def test_settings_default_smtp_backend(tmp_path: Path, monkeypatch) -> None:

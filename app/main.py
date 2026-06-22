@@ -15,20 +15,27 @@ from sqlalchemy import select
 from app.catalog import CITY_OPTIONS, PROPERTY_TYPES, ROOM_OPTIONS, TRANSACTION_TYPES
 from app.config import get_settings
 from app.db import Base, SessionLocal, engine
-from app.email.delivery import EmailService
-from app.models import Listing, Subscription
-from app.schemas import SubscriptionCreate
-from app.services.jobs import JobService
-from app.services.listings import (
-    listing_source_label,
-    load_listings_for_subscription,
-    load_listings_for_subscriptions,
-)
+from app.email import delivery as email_delivery
+from app.models import Listing
+from app.schemas import SchedulerConfigUpdate, SubscriptionCreate
+from app.services import listings as listings_service
+from app.services.jobs import JobService, execute_job_run
+from app.services.listings import load_listings_for_subscription
 from app.services.preview import PreviewResult, build_preview
+from app.services.scheduler import AppScheduler, SchedulerConfigService
 from app.services.subscriptions import SubscriptionService, to_subscription_view
+
+EmailService = email_delivery.EmailService
+load_listings_for_subscriptions = listings_service.load_listings_for_subscriptions
 
 settings = get_settings()
 templates = Jinja2Templates(directory="app/templates")
+
+scheduler_manager = AppScheduler(
+    session_factory_getter=lambda: SessionLocal,
+    settings_getter=lambda: settings,
+    job_runner=lambda: execute_job_run(SessionLocal, settings),
+)
 
 
 @asynccontextmanager
@@ -38,7 +45,11 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     _ = app_models
     Path("var").mkdir(exist_ok=True)
     Base.metadata.create_all(bind=engine)
-    yield
+    scheduler_manager.start()
+    try:
+        yield
+    finally:
+        scheduler_manager.shutdown()
 
 
 app = FastAPI(title=settings.app_title, lifespan=lifespan)
@@ -53,6 +64,13 @@ def load_subscription_state() -> tuple[list[PreviewResult], int]:
         listings = list(session.scalars(select(Listing)))
     previews = [build_preview(subscription, listings) for subscription in subscriptions]
     return previews, len(listings)
+
+
+def load_scheduler_config() -> dict[str, object]:
+    with SessionLocal() as session:
+        config_service = SchedulerConfigService(session, settings)
+        config_service.get_or_create()
+    return scheduler_manager.current_view().model_dump()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -74,6 +92,7 @@ def read_root(request: Request) -> HTMLResponse:
         "property_types": PROPERTY_TYPES,
         "request": request,
         "room_options": ROOM_OPTIONS,
+        "scheduler_config": load_scheduler_config(),
         "transaction_types": TRANSACTION_TYPES,
     }
     return templates.TemplateResponse(request, "index.html", context)
@@ -181,22 +200,40 @@ def delete_subscription(token: str) -> JSONResponse:
     return JSONResponse(status_code=200, content={"status": "deleted"})
 
 
+@app.get("/scheduler/settings")
+def read_scheduler_settings() -> dict[str, object]:
+    return load_scheduler_config()
+
+
+@app.post("/scheduler/settings")
+async def update_scheduler_settings(request: Request) -> JSONResponse:
+    try:
+        payload = SchedulerConfigUpdate.model_validate(await request.json())
+    except ValidationError as exc:
+        return JSONResponse(
+            status_code=422,
+            content={"errors": jsonable_encoder(exc.errors())},
+        )
+
+    with SessionLocal() as session:
+        config_service = SchedulerConfigService(session, settings)
+        config_service.update(payload)
+    scheduler_manager.sync_schedule()
+    return JSONResponse(status_code=200, content=load_scheduler_config())
+
+
 @app.post("/jobs/run")
 def run_job() -> JSONResponse:
-    with SessionLocal() as session:
-        job_service = JobService(session)
-        email_service = EmailService(settings)
-        subscriptions = [
-            to_subscription_view(item)
-            for item in session.scalars(
-                select(Subscription).where(Subscription.active.is_(True))
-            )
-        ]
-        listings = load_listings_for_subscriptions(subscriptions, settings)
-        result = job_service.run_daily_job(
-            listing_source_label(settings),
-            listings,
-            email_service,
+    acquired, result = scheduler_manager.run_manual_job()
+    if not acquired:
+        return JSONResponse(
+            status_code=409,
+            content={"error": "A job is already running."},
+        )
+    if result is None:
+        return JSONResponse(
+            status_code=500,
+            content={"error": "Job run did not produce a result."},
         )
 
     return JSONResponse(

@@ -1,4 +1,4 @@
----
+﻿---
 name: fullstack-feature
 description: Coordinate full-stack Bulgaria Property Alert product features that require FastAPI/SQLAlchemy backend work plus Jinja2/Bootstrap UI work, including API contract planning, conditional subagent implementation, verification, integration review, and plans.md updates. Use for cross-layer features, not small backend-only, frontend-only, documentation-only, or simple one-file tasks.
 ---
@@ -36,7 +36,7 @@ description: Coordinate full-stack Bulgaria Property Alert product features that
 1. Run the smallest relevant tests while iterating: `.\.venv\Scripts\python -m pytest <relevant-test-path>`
 2. Run the full suite: `.\.venv\Scripts\python -m pytest`
 3. Run lint: `.\.venv\Scripts\python -m ruff check .`
-4. For UI behavior, run `.\.venv\Scripts\uvicorn app.main:app --reload` and manually/browser-check the affected pages when relevant. There is no configured browser automation suite, typecheck command, or separate build command.
+4. For UI behavior, run `.\.venv\Scripts\uvicorn app.main:app --reload` and open the affected pages in the embedded browser at `http://127.0.0.1:8000` when relevant. Verify normal, validation-error, empty, and responsive states honestly. There is no configured browser automation suite, typecheck command, or separate build command.
 5. Update `plans.md` when the feature completes or changes planned scope/status; make only a focused plan edit.
 6. Summarize changed files, agreed contract changes, user-facing behavior, verification actually run with results, and remaining risks. Never claim an unrun check passed.
 
@@ -45,3 +45,4 @@ description: Coordinate full-stack Bulgaria Property Alert product features that
 - `Use $fullstack-feature to add the subscription creation flow across FastAPI, SQLAlchemy, and the Jinja2/Bootstrap form. Reconcile the contract before implementation.`
 - `Use $fullstack-feature to add tokenized unsubscribe with a confirmation page and tests, using project subagents only where the cross-layer work benefits.`
 - `Use $fullstack-feature to add validation feedback for property criteria while preserving the current REST and database contracts.`
+

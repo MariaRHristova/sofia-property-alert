@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
@@ -93,3 +93,39 @@ class SubscriptionCreate(BaseModel):
         if value is not None and min_price is not None and value < min_price:
             raise ValueError("Maximum price must be greater than minimum price.")
         return value
+
+
+class SchedulerConfigUpdate(BaseModel):
+    enabled: bool
+    mode: str
+    interval_minutes: int = Field(default=60, ge=1, le=1440)
+    daily_run_time: str = "08:00"
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, value: str) -> str:
+        if value not in {"interval", "daily_time"}:
+            raise ValueError("Unsupported scheduler mode.")
+        return value
+
+    @field_validator("daily_run_time")
+    @classmethod
+    def validate_daily_run_time(cls, value: str) -> str:
+        cleaned = value.strip()
+        if len(cleaned) != 5 or cleaned[2] != ":":
+            raise ValueError("Daily run time must be in HH:MM format.")
+        hours, minutes = cleaned.split(":", maxsplit=1)
+        if not (hours.isdigit() and minutes.isdigit()):
+            raise ValueError("Daily run time must be in HH:MM format.")
+        if not (0 <= int(hours) <= 23 and 0 <= int(minutes) <= 59):
+            raise ValueError("Daily run time must be in HH:MM format.")
+        return cleaned
+
+
+class SchedulerConfigView(BaseModel):
+    enabled: bool
+    mode: str
+    interval_minutes: int
+    daily_run_time: str
+    next_run_at: str | None = None
+    running: bool = False

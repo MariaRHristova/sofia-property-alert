@@ -1,14 +1,17 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Callable
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.config import Settings
 from app.email.delivery import EmailDeliveryResult, EmailService
 from app.models import JobRun, Listing, ListingMatch, Subscription
 from app.providers.base import ListingCandidate
+from app.services.listings import listing_source_label, load_listings_for_subscriptions
 from app.services.preview import matches_subscription
 from app.services.subscriptions import to_subscription_view
 
@@ -186,3 +189,24 @@ class JobService:
         if delivery_result.output_path:
             return [delivery_result.output_path]
         return []
+
+
+def execute_job_run(
+    session_factory: Callable[[], Session],
+    settings: Settings,
+) -> JobResult:
+    with session_factory() as session:
+        job_service = JobService(session)
+        email_service = EmailService(settings)
+        subscriptions = [
+            to_subscription_view(item)
+            for item in session.scalars(
+                select(Subscription).where(Subscription.active.is_(True))
+            )
+        ]
+        listings = load_listings_for_subscriptions(subscriptions, settings)
+        return job_service.run_daily_job(
+            listing_source_label(settings),
+            listings,
+            email_service,
+        )

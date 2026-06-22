@@ -19,7 +19,6 @@
       }
 
       * { box-sizing: border-box; }
-
       body {
         margin: 0;
         font-family: Georgia, "Times New Roman", serif;
@@ -42,179 +41,46 @@
         backdrop-filter: blur(10px);
       }
 
-      .hero {
-        border-radius: 28px;
-        padding: 32px;
-        margin-bottom: 24px;
-      }
-
-      .eyebrow {
-        margin: 0 0 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.16em;
-        font-size: 0.76rem;
-        color: var(--warm);
-      }
-
+      .hero { border-radius: 28px; padding: 32px; margin-bottom: 24px; }
+      .eyebrow { margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.76rem; color: var(--warm); }
       h1, h2, h3 { margin: 0; line-height: 1.05; }
-
-      h1 {
-        font-size: clamp(2.6rem, 5vw, 4.6rem);
-        max-width: 10ch;
-      }
-
-      .hero p {
-        max-width: 58ch;
-        font-size: 1.05rem;
-        color: var(--muted);
-        margin: 18px 0 0;
-      }
-
-      .hero-grid, .content-grid, .form-grid, .metric-grid, .subscription-grid, .listing-grid {
-        display: grid;
-        gap: 18px;
-      }
-
-      .hero-grid {
-        grid-template-columns: 1.4fr 0.8fr;
-        align-items: end;
-      }
-
+      h1 { font-size: clamp(2.6rem, 5vw, 4.6rem); max-width: 10ch; }
+      .hero p { max-width: 58ch; font-size: 1.05rem; color: var(--muted); margin: 18px 0 0; }
+      .hero-grid, .content-grid, .form-grid, .metric-grid, .subscription-grid, .listing-grid { display: grid; gap: 18px; }
+      .hero-grid { grid-template-columns: 1.4fr 0.8fr; align-items: end; }
       .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-      .metric {
-        border-radius: 20px;
-        padding: 18px;
-        background: #f8f4ee;
-        border: 1px solid var(--line);
-      }
-
-      .metric strong {
-        display: block;
-        font-size: 2rem;
-        margin-top: 8px;
-      }
-
-      .content-grid {
-        grid-template-columns: minmax(320px, 420px) 1fr;
-        align-items: start;
-      }
-
-      .panel {
-        border-radius: 24px;
-        padding: 24px;
-      }
-
+      .metric { border-radius: 20px; padding: 18px; background: #f8f4ee; border: 1px solid var(--line); }
+      .metric strong { display: block; font-size: 2rem; margin-top: 8px; }
+      .content-grid { grid-template-columns: minmax(320px, 420px) 1fr; align-items: start; }
+      .panel { border-radius: 24px; padding: 24px; }
       .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-      label {
-        display: grid;
-        gap: 8px;
-        font-size: 0.95rem;
-        color: var(--muted);
-      }
-
+      label { display: grid; gap: 8px; font-size: 0.95rem; color: var(--muted); }
       label.full { grid-column: 1 / -1; }
-
-      input, select, button {
-        font: inherit;
-      }
-
+      input, select, button { font: inherit; }
       input, select {
-        width: 100%;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 12px 14px;
-        background: #fff;
-        color: var(--ink);
+        width: 100%; border: 1px solid var(--line); border-radius: 14px;
+        padding: 12px 14px; background: #fff; color: var(--ink);
       }
-
       select[multiple] { min-height: 138px; }
-
-      button {
-        border: 0;
-        border-radius: 999px;
-        padding: 13px 20px;
-        cursor: pointer;
-      }
-
-      .primary {
-        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
-        color: #fff;
-        font-weight: 700;
-      }
-
-      .ghost {
-        background: transparent;
-        border: 1px solid var(--danger);
-        color: var(--danger);
-      }
-
-      .muted-copy {
-        color: var(--muted);
-        font-size: 0.92rem;
-      }
-
-      .flash {
-        min-height: 24px;
-        margin-top: 14px;
-        font-size: 0.95rem;
-      }
-
+      button { border: 0; border-radius: 999px; padding: 13px 20px; cursor: pointer; }
+      .primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%); color: #fff; font-weight: 700; }
+      .ghost { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+      .muted-copy { color: var(--muted); font-size: 0.92rem; }
+      .flash { min-height: 24px; margin-top: 14px; font-size: 0.95rem; }
       .flash.error { color: var(--danger); }
       .flash.success { color: var(--accent-strong); }
-
-      .subscription-grid, .listing-grid {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      }
-
-      .subscription-card {
-        border-radius: 24px;
-        padding: 20px;
-      }
-
-      .pill-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 14px 0;
-      }
-
-      .pill {
-        padding: 7px 10px;
-        border-radius: 999px;
-        background: #ecf8f6;
-        color: var(--accent-strong);
-        font-size: 0.84rem;
-      }
-
-      .pill.inactive {
-        background: #f2e9e5;
-        color: #8b5e3c;
-      }
-
-      .listing {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        padding: 16px;
-      }
-
+      .subscription-grid, .listing-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+      .subscription-card { border-radius: 24px; padding: 20px; }
+      .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0; }
+      .pill { padding: 7px 10px; border-radius: 999px; background: #ecf8f6; color: var(--accent-strong); font-size: 0.84rem; }
+      .pill.inactive { background: #f2e9e5; color: #8b5e3c; }
+      .listing { background: #fff; border: 1px solid var(--line); border-radius: 18px; padding: 16px; }
       .listing a { color: inherit; }
-
-      .listing-meta {
-        color: var(--muted);
-        margin: 8px 0 0;
-        font-size: 0.92rem;
-      }
-
-      .empty {
-        padding: 22px;
-        border-radius: 20px;
-        border: 1px dashed var(--line);
-        color: var(--muted);
-        background: rgba(255, 255, 255, 0.6);
-      }
+      .listing-meta { color: var(--muted); margin: 8px 0 0; font-size: 0.92rem; }
+      .empty { padding: 22px; border-radius: 20px; border: 1px dashed var(--line); color: var(--muted); background: rgba(255, 255, 255, 0.6); }
+      .scheduler-box { margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+      .scheduler-meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+      .hidden { display: none; }
 
       @media (max-width: 880px) {
         .hero-grid, .content-grid, .form-grid { grid-template-columns: 1fr; }
@@ -252,7 +118,6 @@
                 Email
                 <input name="email" type="email" placeholder="you@example.com" required />
               </label>
-
               <label>
                 Transaction type
                 <select name="transaction_type" required>
@@ -261,7 +126,6 @@
                   {% endfor %}
                 </select>
               </label>
-
               <label>
                 Property type
                 <select name="property_type" required>
@@ -270,12 +134,10 @@
                   {% endfor %}
                 </select>
               </label>
-
               <label>
                 City
                 <select name="city" id="city-select" required></select>
               </label>
-
               <label>
                 Rooms
                 <select name="rooms">
@@ -285,22 +147,18 @@
                   {% endfor %}
                 </select>
               </label>
-
               <label class="full">
                 Preferred districts
                 <select name="districts" id="district-select" multiple></select>
               </label>
-
               <label>
                 Minimum price (EUR)
                 <input name="min_price_eur" type="number" min="0" step="1000" />
               </label>
-
               <label>
                 Maximum price (EUR)
                 <input name="max_price_eur" type="number" min="0" step="1000" />
               </label>
-
               <label class="full">
                 Minimum area (sq.m)
                 <input name="min_area_sqm" type="number" min="0" step="1" />
@@ -308,15 +166,7 @@
             </div>
 
             <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-              <button
-                class="primary"
-                id="subscription-save-button"
-                type="submit"
-                data-default-label="Save subscription"
-                data-busy-label="Searching listings..."
-              >
-                Save subscription
-              </button>
+              <button class="primary" id="subscription-save-button" type="submit" data-default-label="Save subscription" data-busy-label="Searching listings...">Save subscription</button>
               <span class="muted-copy">Select multiple districts with Ctrl or Cmd.</span>
             </div>
             <div id="flash" class="flash" aria-live="polite"></div>
@@ -324,14 +174,51 @@
         </section>
 
         <section class="panel">
+          <div class="scheduler-box">
+            <h2>Scheduler settings</h2>
+            <p class="muted-copy">Choose one app-wide schedule for the PoC. Later this can become per-user.</p>
+            <form id="scheduler-form">
+              <div class="form-grid">
+                <label>
+                  Scheduler enabled
+                  <select name="enabled" id="scheduler-enabled">
+                    <option value="true" {% if scheduler_config.enabled %}selected{% endif %}>Enabled</option>
+                    <option value="false" {% if not scheduler_config.enabled %}selected{% endif %}>Disabled</option>
+                  </select>
+                </label>
+                <label>
+                  Mode
+                  <select name="mode" id="scheduler-mode">
+                    <option value="interval" {% if scheduler_config.mode == "interval" %}selected{% endif %}>Every N minutes</option>
+                    <option value="daily_time" {% if scheduler_config.mode == "daily_time" %}selected{% endif %}>Once per day</option>
+                  </select>
+                </label>
+                <label id="interval-group">
+                  Interval minutes
+                  <input name="interval_minutes" id="scheduler-interval" type="number" min="1" max="1440" value="{{ scheduler_config.interval_minutes }}" />
+                </label>
+                <label id="time-group">
+                  Daily run time
+                  <input name="daily_run_time" id="scheduler-time" type="time" value="{{ scheduler_config.daily_run_time }}" />
+                </label>
+              </div>
+              <div style="margin-top: 18px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button class="primary" id="scheduler-save-button" type="submit" data-default-label="Save scheduler" data-busy-label="Saving scheduler...">Save scheduler</button>
+                <span class="muted-copy">Next run: <span id="next-run-label">{{ scheduler_config.next_run_at or "Not scheduled" }}</span></span>
+              </div>
+            </form>
+            <div class="scheduler-meta">
+              <span class="pill">Mode: <span id="scheduler-mode-pill">{{ scheduler_config.mode }}</span></span>
+              <span class="pill">Running: <span id="scheduler-running-pill">{{ "Yes" if scheduler_config.running else "No" }}</span></span>
+            </div>
+          </div>
+
           <h2>Stored subscriptions and preview matches</h2>
-          <p class="muted-copy">
-            Each card below is real persisted data matched against the current listing source.
-          </p>
+          <p class="muted-copy">Each card below is real persisted data matched against the current listing source.</p>
 
           <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
             <button id="run-job-button" class="primary" type="button">Run daily job</button>
-            <span class="muted-copy">The scheduler is still manual in this PoC.</span>
+            <span class="muted-copy">Manual run stays available even when the scheduler is enabled.</span>
           </div>
 
           {% if preview_groups %}
@@ -342,9 +229,7 @@
               <p class="muted-copy">{{ group.subscription.email }}</p>
               <div class="pill-row">
                 <span class="pill">{{ group.subscription.transaction_type | title }}</span>
-                <span class="pill {% if not group.subscription.active %}inactive{% endif %}">
-                  {% if group.subscription.active %}Active{% else %}Inactive{% endif %}
-                </span>
+                <span class="pill {% if not group.subscription.active %}inactive{% endif %}">{% if group.subscription.active %}Active{% else %}Inactive{% endif %}</span>
                 {% if group.subscription.rooms %}<span class="pill">{{ group.subscription.rooms }} rooms</span>{% endif %}
                 {% if group.subscription.min_price_eur %}<span class="pill">From €{{ "%.0f"|format(group.subscription.min_price_eur) }}</span>{% endif %}
                 {% if group.subscription.max_price_eur %}<span class="pill">To €{{ "%.0f"|format(group.subscription.max_price_eur) }}</span>{% endif %}
@@ -379,13 +264,7 @@
                 <button class="primary resubscribe-button" type="submit">Subscribe again</button>
               </form>
               {% endif %}
-              <button
-                class="ghost delete-button"
-                type="button"
-                data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}"
-              >
-                Delete permanently
-              </button>
+              <button class="ghost delete-button" type="button" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}">Delete permanently</button>
             </article>
             {% endfor %}
           </div>
@@ -406,10 +285,19 @@
       const citySelect = document.getElementById("city-select");
       const districtSelect = document.getElementById("district-select");
       const form = document.getElementById("subscription-form");
+      const schedulerForm = document.getElementById("scheduler-form");
+      const schedulerMode = document.getElementById("scheduler-mode");
+      const schedulerEnabled = document.getElementById("scheduler-enabled");
+      const intervalGroup = document.getElementById("interval-group");
+      const timeGroup = document.getElementById("time-group");
       const flash = document.getElementById("flash");
       const subscriptionSaveButton = document.getElementById("subscription-save-button");
+      const schedulerSaveButton = document.getElementById("scheduler-save-button");
       const runJobButton = document.getElementById("run-job-button");
       const jobRuns = document.getElementById("job-runs");
+      const nextRunLabel = document.getElementById("next-run-label");
+      const schedulerModePill = document.getElementById("scheduler-mode-pill");
+      const schedulerRunningPill = document.getElementById("scheduler-running-pill");
 
       function renderCities() {
         citySelect.innerHTML = "";
@@ -433,6 +321,12 @@
         }
       }
 
+      function renderSchedulerMode() {
+        const intervalSelected = schedulerMode.value === "interval";
+        intervalGroup.classList.toggle("hidden", !intervalSelected);
+        timeGroup.classList.toggle("hidden", intervalSelected);
+      }
+
       async function refreshJobRuns() {
         const response = await fetch("/jobs/recent");
         const data = await response.json();
@@ -454,9 +348,7 @@
       }
 
       function setBusyState(button, busy, busyLabel) {
-        if (!button) {
-          return;
-        }
+        if (!button) return;
         if (busy) {
           button.dataset.previousLabel = button.textContent.trim();
           button.textContent = busyLabel;
@@ -464,26 +356,21 @@
           button.setAttribute("aria-busy", "true");
           return;
         }
-        button.textContent =
-          button.dataset.previousLabel ||
-          button.dataset.defaultLabel ||
-          button.textContent;
+        button.textContent = button.dataset.previousLabel || button.dataset.defaultLabel || button.textContent;
         button.disabled = false;
         button.removeAttribute("aria-busy");
       }
 
       renderCities();
       renderDistricts();
+      renderSchedulerMode();
       citySelect.addEventListener("change", renderDistricts);
+      schedulerMode.addEventListener("change", renderSchedulerMode);
       refreshJobRuns();
 
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
-        setBusyState(
-          subscriptionSaveButton,
-          true,
-          subscriptionSaveButton?.dataset.busyLabel || "Searching listings...",
-        );
+        setBusyState(subscriptionSaveButton, true, subscriptionSaveButton?.dataset.busyLabel || "Searching listings...");
         showMessage("Searching listings for your selected criteria...", "success");
 
         try {
@@ -515,17 +402,45 @@
           }
 
           const data = await response.json();
-          showMessage(
-            `Saved. Searching complete. ${data.preview_match_count} matching listings found. Reloading...`,
-            "success",
-          );
+          showMessage(`Saved. Searching complete. ${data.preview_match_count} matching listings found. Reloading...`, "success");
           window.setTimeout(() => window.location.reload(), 500);
         } catch (error) {
-          showMessage(
-            `Could not save the subscription. ${error instanceof Error ? error.message : "Network request failed."}`,
-            "error",
-          );
+          showMessage(`Could not save the subscription. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
           setBusyState(subscriptionSaveButton, false);
+        }
+      });
+
+      schedulerForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setBusyState(schedulerSaveButton, true, schedulerSaveButton?.dataset.busyLabel || "Saving scheduler...");
+        showMessage("Saving scheduler settings...", "success");
+        try {
+          const payload = {
+            enabled: schedulerEnabled.value === "true",
+            mode: schedulerMode.value,
+            interval_minutes: Number(document.getElementById("scheduler-interval").value || 60),
+            daily_run_time: document.getElementById("scheduler-time").value || "08:00",
+          };
+          const response = await fetch("/scheduler/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            const firstError = data.errors?.[0]?.msg || data.error || "Could not save scheduler settings.";
+            showMessage(firstError, "error");
+            setBusyState(schedulerSaveButton, false);
+            return;
+          }
+          nextRunLabel.textContent = data.next_run_at || "Not scheduled";
+          schedulerModePill.textContent = data.mode;
+          schedulerRunningPill.textContent = data.running ? "Yes" : "No";
+          showMessage("Scheduler settings saved.", "success");
+          setBusyState(schedulerSaveButton, false);
+        } catch (error) {
+          showMessage(`Could not save scheduler settings. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
+          setBusyState(schedulerSaveButton, false);
         }
       });
 
@@ -533,42 +448,26 @@
         try {
           const response = await fetch("/jobs/run", { method: "POST" });
           if (!response.ok) {
-            const errorText = await response.text();
-            const fallback = "Could not run the daily job.";
-            showMessage(
-              errorText ? `${fallback} ${errorText}` : fallback,
-              "error",
-            );
+            const data = await response.json().catch(() => ({}));
+            showMessage(data.error || "Could not run the daily job.", "error");
             return;
           }
           const data = await response.json();
           if (data.email_errors?.length) {
-            showMessage(
-              `Daily job finished, but no email was delivered. ${data.email_errors[0]}`,
-              "error",
-            );
+            showMessage(`Daily job finished, but no email was delivered. ${data.email_errors[0]}`, "error");
             await refreshJobRuns();
             return;
           }
           if (data.email_backend === "preview") {
-            showMessage(
-              "Daily job finished in preview mode. A local .eml file was created; no email was sent.",
-              "success",
-            );
+            showMessage("Daily job finished in preview mode. A local .eml file was created; no email was sent.", "success");
             await refreshJobRuns();
             return;
           }
-          showMessage(
-            `Daily job finished. ${data.emails_sent} email(s) sent. Reloading...`,
-            "success",
-          );
+          showMessage(`Daily job finished. ${data.emails_sent} email(s) sent. Reloading...`, "success");
           await refreshJobRuns();
           window.setTimeout(() => window.location.reload(), 500);
         } catch (error) {
-          showMessage(
-            `Could not run the daily job. ${error instanceof Error ? error.message : "Network request failed."}`,
-            "error",
-          );
+          showMessage(`Could not run the daily job. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
         }
       });
 
@@ -577,32 +476,17 @@
           event.preventDefault();
           const actionButton = form.querySelector("button");
           const isReactivate = form.dataset.url?.includes("/subscribe");
-          setBusyState(
-            actionButton,
-            true,
-            isReactivate ? "Searching again..." : "Unsubscribing...",
-          );
-          showMessage(
-            isReactivate
-              ? "Reactivating the alert and searching based on your criteria..."
-              : "Unsubscribing and clearing the current matches...",
-            "success",
-          );
-          const response = await fetch(form.dataset.url, {
-            method: form.dataset.method || "POST",
-          });
+          setBusyState(actionButton, true, isReactivate ? "Searching again..." : "Unsubscribing...");
+          showMessage(isReactivate ? "Reactivating the alert and searching based on your criteria..." : "Unsubscribing and clearing the current matches...", "success");
+          const response = await fetch(form.dataset.url, { method: form.dataset.method || "POST" });
           if (!response.ok) {
-            const failedAction = isReactivate
-              ? "subscribe again"
-              : "unsubscribe this alert";
+            const failedAction = isReactivate ? "subscribe again" : "unsubscribe this alert";
             showMessage(`Could not ${failedAction}.`, "error");
             setBusyState(actionButton, false);
             return;
           }
           const data = await response.json();
-          const message = isReactivate
-            ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...`
-            : "Subscription unsubscribed. Reloading...";
+          const message = isReactivate ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...` : "Subscription unsubscribed. Reloading...";
           showMessage(message, "success");
           window.setTimeout(() => window.location.reload(), 500);
         });
@@ -610,9 +494,7 @@
 
       for (const button of document.querySelectorAll(".delete-button")) {
         button.addEventListener("click", async () => {
-          if (!window.confirm("Permanently delete this subscription and its match history?")) {
-            return;
-          }
+          if (!window.confirm("Permanently delete this subscription and its match history?")) return;
           const response = await fetch(button.dataset.url, { method: "DELETE" });
           if (!response.ok) {
             showMessage("Could not delete this subscription.", "error");

@@ -4,6 +4,7 @@ import smtplib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.message import EmailMessage
+from html import escape
 from pathlib import Path
 
 from app.config import Settings
@@ -81,58 +82,134 @@ def _build_html(
     subscription: SubscriptionView,
     matches: list[dict[str, object]],
 ) -> str:
+    subscription_badges = _build_subscription_badges(subscription)
+    listing_cards = _build_listing_cards(matches)
+    match_count = len(matches)
+    hero_copy = (
+        "There are no available listings for your saved criteria today."
+        if match_count == 0
+        else f"We found {match_count} matching listings for your alert."
+    )
+    status_tone = "quiet" if match_count == 0 else "success"
+    status_label = "No matches yet" if match_count == 0 else f"{match_count} matches found"
+
+    return f"""<html>
+  <body style=\"margin:0;background:#eef2f7;padding:24px 0;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0f172a;\">
+    <div style=\"max-width:760px;margin:0 auto;padding:0 16px;\">
+      <div style=\"background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%);border-radius:24px;padding:28px;color:#ffffff;box-shadow:0 18px 48px rgba(15,23,42,0.2);\">
+        <div style=\"font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:12px;\">Bulgaria Property Alert</div>
+        <h1 style=\"margin:0 0 10px;font-size:28px;line-height:1.15;\">Your daily property digest</h1>
+        <p style=\"margin:0;max-width:58ch;font-size:15px;line-height:1.7;opacity:.92;\">Hello {escape(subscription.email)}, {escape(hero_copy)}</p>
+      </div>
+
+      <div style=\"margin-top:18px;background:#ffffff;border:1px solid #dbe3ef;border-radius:24px;padding:22px;box-shadow:0 12px 32px rgba(15,23,42,0.08);\">
+        <div style=\"display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start;\">
+          <div>
+            <div style=\"font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:6px;\">Subscription</div>
+            <div style=\"font-size:20px;font-weight:700;color:#0f172a;\">{escape(subscription.city)} · {escape(subscription.property_type.title())}</div>
+            <div style=\"margin-top:6px;color:#475569;line-height:1.6;\">{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
+          </div>
+          <div style=\"display:inline-flex;align-items:center;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;background:{'#ecfeff' if status_tone == 'quiet' else '#dcfce7'};color:{'#155e75' if status_tone == 'quiet' else '#166534'};\">{escape(status_label)}</div>
+        </div>
+
+        <div style=\"margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;\">{subscription_badges}</div>
+      </div>
+
+      <div style=\"margin-top:18px;\">
+        <div style=\"font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin:0 0 10px 4px;\">Matched listings</div>
+        {listing_cards}
+      </div>
+    </div>
+  </body>
+</html>"""
+
+
+def _build_subscription_badges(subscription: SubscriptionView) -> str:
+    badges = [
+        _badge(subscription.transaction_type.title(), "primary"),
+        _badge(subscription.city, "neutral"),
+        _badge(subscription.property_type.title(), "neutral"),
+    ]
+    if subscription.districts:
+        badges.append(_badge(", ".join(subscription.districts), "accent"))
+    if subscription.rooms:
+        badges.append(_badge(f"{subscription.rooms} rooms", "accent"))
+    if subscription.min_price_eur is not None or subscription.max_price_eur is not None:
+        min_price = _format_currency(subscription.min_price_eur)
+        max_price = _format_currency(subscription.max_price_eur)
+        if min_price and max_price:
+            badges.append(_badge(f"€{min_price} - €{max_price}", "accent"))
+        elif min_price:
+            badges.append(_badge(f"From €{min_price}", "accent"))
+        elif max_price:
+            badges.append(_badge(f"Up to €{max_price}", "accent"))
+    if subscription.min_area_sqm is not None:
+        badges.append(_badge(f"Min {subscription.min_area_sqm:.0f} sq.m", "accent"))
+    return "".join(badges)
+
+
+def _build_listing_cards(matches: list[dict[str, object]]) -> str:
     if not matches:
         return (
-            "<html><body style=\"font-family:Arial,sans-serif;line-height:1.5;\">"
-            "<h1 style=\"margin-bottom:0.5rem;\">Bulgaria Property Alert</h1>"
-            "<p>Hello {email},</p>"
-            "<p><strong>There are no available listings</strong> "
-            "for your saved criteria today.</p>"
-            "<p>We will keep checking and send the next digest when matches appear.</p>"
-            "<p style=\"color:#666;\">"
-            "Criteria: {city}, {transaction_type}, {property_type}</p>"
-            "</body></html>"
-        ).format(
-            email=subscription.email,
-            city=subscription.city,
-            transaction_type=subscription.transaction_type,
-            property_type=subscription.property_type,
+            '<div style="background:#ffffff;border:1px dashed #cbd5e1;border-radius:20px;padding:18px;color:#64748b;line-height:1.7;">'
+            'No listings matched this subscription today. We will keep monitoring and send the next digest when a fit appears.'
+            '</div>'
         )
 
-    html_matches = []
-    for match in matches:
-        title = str(match["title"])
-        url = str(match["url"])
-        city = str(match["city"])
+    cards = []
+    for index, match in enumerate(matches, start=1):
+        title = escape(str(match["title"]))
+        url = escape(str(match["url"]))
+        city = escape(str(match["city"]))
         district = match.get("district")
-        price = match.get("price_eur")
-        area = match.get("area_sqm")
-        html_matches.append(
-            (
-                "<li><a href=\"{url}\">{title}</a> - {city}{district} - "
-                "{price} EUR - {area} sq.m</li>"
-            ).format(
-                url=url,
-                title=title,
-                city=city,
-                district=f", {district}" if district else "",
-                price=price if price is not None else "N/A",
-                area=area if area is not None else "N/A",
-            )
+        district_text = f", {escape(str(district))}" if district else ""
+        price = _format_currency(match.get("price_eur"))
+        area = _format_number(match.get("area_sqm"))
+        cards.append(
+            f'''<div style="background:#ffffff;border:1px solid #dbe3ef;border-radius:22px;padding:18px 18px 16px;margin-bottom:12px;box-shadow:0 8px 24px rgba(15,23,42,0.06);">
+  <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+    <div style="min-width:0;">
+      <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin-bottom:6px;">Listing {index}</div>
+      <div style="font-size:18px;font-weight:700;line-height:1.35;color:#0f172a;margin-bottom:8px;"><a href="{url}" style="color:#0f172a;text-decoration:none;">{title}</a></div>
+      <div style="color:#475569;line-height:1.7;">{city}{district_text}</div>
+    </div>
+    <div style="text-align:right;white-space:nowrap;">
+      <div style="display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;margin-bottom:8px;">€{price}</div>
+      <div style="display:block;color:#64748b;font-size:13px;">{area} sq.m</div>
+    </div>
+  </div>
+</div>'''
         )
+    return "".join(cards)
 
+
+def _badge(label: str, tone: str) -> str:
+    styles = {
+        "primary": "background:#0f172a;color:#ffffff;border:1px solid #0f172a;",
+        "neutral": "background:#f1f5f9;color:#0f172a;border:1px solid #dbe3ef;",
+        "accent": "background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;",
+    }
     return (
-        "<html><body style=\"font-family:Arial,sans-serif;line-height:1.5;\">"
-        "<h1 style=\"margin-bottom:0.5rem;\">Bulgaria Property Alert</h1>"
-        "<p>Hello {email},</p>"
-        "<p>We found <strong>{count}</strong> matching listings for your alert.</p>"
-        "<ul>{matches}</ul>"
-        "</body></html>"
-    ).format(
-        email=subscription.email,
-        count=len(matches),
-        matches="".join(html_matches),
+        f'<span style="display:inline-flex;align-items:center;border-radius:999px;'
+        f'padding:8px 12px;font-size:13px;font-weight:600;line-height:1;{styles[tone]}">'
+        f'{escape(label)}</span>'
     )
+
+
+def _format_currency(value: object | None) -> str:
+    if value is None:
+        return "N/A"
+    if isinstance(value, (int, float)):
+        return f"{value:,.0f}".replace(",", " ")
+    return escape(str(value))
+
+
+def _format_number(value: object | None) -> str:
+    if value is None:
+        return "N/A"
+    if isinstance(value, (int, float)):
+        return f"{value:.0f}"
+    return escape(str(value))
 
 
 class EmailService:

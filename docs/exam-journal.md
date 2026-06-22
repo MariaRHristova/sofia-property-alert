@@ -1,4 +1,4 @@
-# Bulgaria Property Alert - Exam Journal
+﻿# Bulgaria Property Alert - Exam Journal
 
 This journal contains raw, verified evidence for the AI-Assisted Development exam report. It is intentionally more detailed than the final submission.
 
@@ -16,7 +16,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 | Database layer | In progress | `app/models.py`, `app/db.py`, `app/services/subscriptions.py` |
 | Listing provider and parsing | Complete | `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `tests/test_fixture_parser.py` |
 | Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
-| Scheduler | Not started | TODO |
+| Scheduler | Complete | `app/services/scheduler.py`, `app/main.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py` |
 | Email delivery | In progress | `app/email/delivery.py`, `app/services/jobs.py`, `tests/test_email_digest.py` |
 | Testing and observability | In progress | `tests/conftest.py`, `tests/test_fixture_parser.py`, `tests/test_app_routes.py` |
 
@@ -243,3 +243,26 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`.
 - **Challenges and learning:** The main risk was making the UI feel busy without breaking the request flow. Using disabled buttons with explicit labels kept the feedback visible while preserving the existing reload-based navigation.
 - **Evidence:** `app/templates/index.html`, `docs/exam-journal.md`, and the verified command outputs above.
+
+### 2026-06-22 - Search progress feedback added to save and reactivation
+
+- **Outcome:** Made the subscription save and reactivation actions visibly communicate that the app is actively searching using the selected criteria. Both buttons now switch to a busy state while the request is in flight, and the flash message explains that matching listings are being searched.
+- **Approach and reasoning:** The previous UI only reacted after the request completed, which made the save and reactivation flow feel inert. I added a small client-side busy-state helper to disable the clicked button, update its label, and show immediate status text while the live preview request runs.
+- **AI-assisted workflow:** Codex updated the Jinja template and inline JavaScript, kept the backend routes unchanged, and reran the route suite and full test suite after the UI polish.
+- **AI tool choice:** Codex was used because the task was a narrow but meaningful frontend behavior refinement that had to remain in sync with the existing backend contract.
+- **Key prompts:** "The subscribe again button is not very responsive. I want the user to know that the app is searcihng based on the criteria and also when I hit the button save suscription, I also want to user to know that something is happening"
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** The main risk was adding feedback without blocking the existing reload-based flow. Disabling the button and updating its label kept the interaction clear while preserving the original request lifecycle.
+- **Evidence:** `app/templates/index.html`, `plans.md`, `docs/exam-journal.md`, and the verified command outputs above.
+
+
+### 2026-06-22 - App-level scheduler with interval and daily-time modes
+
+- **Outcome:** Added a real APScheduler-backed app scheduler for the PoC. The job can now run automatically either every N minutes or once per day at a configured local time, while the existing manual **Run daily job** action remains available.
+- **Approach and reasoning:** Kept the scheduler global for the MVP and reused the same job execution pipeline that the manual route already uses. This avoids divergence between scheduled and manual behavior and leaves a clean path for later per-user scheduling. A database-backed scheduler configuration table was added so the selected mode and value survive restarts.
+- **AI-assisted workflow:** Codex inspected the current manual job flow, config, template, and tests, then introduced a scheduler manager tied to FastAPI lifespan, a persisted scheduler config model, JSON endpoints for updating the schedule, and a small homepage settings form. I corrected a local dependency/import mismatch during verification so the new scheduler stayed additive to the existing test suite.
+- **AI tool choice:** Codex was used because the feature crossed startup lifecycle, persistence, backend routes, UI state, and regression testing in one workspace.
+- **Key prompts:** "PLEASE IMPLEMENT THIS PLAN: # Scheduler Plan for the PoC"; "Both"; "Ok, implement the plan"
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests/test_scheduler_routes.py tests/test_scheduler_service.py -q` with `4 passed`. Then ran `.\.venv\Scripts\python -m pytest -q` with `21 passed, 1 warning` and `.\.venv\Scripts\python -m ruff check app tests` with `All checks passed!`.
+- **Challenges and learning:** The active environment initially failed to import `apscheduler` through the plain interpreter path even though it was declared in `pyproject.toml`. Reinstalling the project into the repo virtual environment and running checks through `.venv` resolved the mismatch cleanly. Two older route tests were also monkeypatching names from `app.main`, so those compatibility exports were preserved explicitly to avoid unnecessary test churn.
+- **Evidence:** `app/config.py`, `app/models.py`, `app/schemas.py`, `app/services/scheduler.py`, `app/services/jobs.py`, `app/main.py`, `app/templates/index.html`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py`, and the verification commands above.

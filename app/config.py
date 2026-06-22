@@ -1,4 +1,4 @@
-from functools import lru_cache
+﻿from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     smtp_password: str = ""
     smtp_use_starttls: bool = True
     scheduler_enabled: bool = False
+    scheduler_mode: str = "interval"
+    scheduler_interval_minutes: int = 60
     daily_run_time: str = "08:00"
 
     model_config = SettingsConfigDict(

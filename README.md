@@ -1,24 +1,44 @@
 ﻿# Bulgaria Property Alert
 
-A web application for creating real-estate search criteria for major Bulgaria cities and receiving a daily email with newly discovered matching listings.
+Bulgaria Property Alert is a FastAPI web application that lets a user define real-estate search criteria for major Bulgarian cities and receive a daily digest of newly discovered matching listings.
 
-## Project status
+The project is built as an exam-friendly MVP with a fixture-backed parsing flow for deterministic tests and a live `imot.bg` integration path behind configuration.
 
-Initial project setup. Architecture and implementation are in progress.
+## What the app does
 
-## Planned MVP
+- Create a property-search subscription
+- Filter by city, preferred district, transaction type, property type, price, rooms, and minimum area
+- Parse and normalize listings from `imot.bg`-style result pages
+- Match new listings against saved subscriptions without resending duplicates
+- Render email digests separately from delivery
+- Run the daily job manually from the UI or automatically through the new app-level scheduler
+- Keep local `.eml` previews for safe inspection during development and tests
 
-- Create a property search subscription
-- Filter by transaction type, property type, district, price, rooms, and area
-- Collect and normalize new listings
-- Avoid duplicate notifications
-- Send a daily email digest
-- Support deterministic tests with saved listing fixtures
+## Current implementation
+
+- FastAPI + Jinja2 UI for subscriptions and job controls
+- SQLite + SQLAlchemy persistence for subscriptions, listings, matches, and job runs
+- BeautifulSoup-based parser for saved fixtures and real imot.bg result structure
+- Fixture-backed tests for deterministic validation
+- SMTP delivery support with preview mode for local development
+- Token-based unsubscribe and permanent delete flows
 
 ## Technology
 
-The planned stack is Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, BeautifulSoup, and Pytest.
+Python, FastAPI, Jinja2, SQLAlchemy, SQLite, APScheduler, BeautifulSoup, lxml, Pytest, and httpx.
+
+## Run locally
+
+The repository includes a virtual environment already, so you can usually start with:
+
+```bash
+.\.venv\Scripts\python -m pytest -q
+.\.venv\Scripts\python -m uvicorn app.main:app --reload
+```
+
+If you prefer a fresh install, use the project dependencies from `pyproject.toml` and the settings in `.env.example`.
 
 ## Exam evidence workflow
 
 Development evidence is recorded in `docs/exam-journal.md`. The project-local `update-exam-evidence` skill in `skills/update-exam-evidence/` defines when and how to update the journal without modifying the original assignment document.
+
