@@ -6,7 +6,7 @@ from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
-from app.catalog import canonicalize_district
+from app.catalog import CITY_OPTIONS, SOFIA_DISTRICT_ALIASES, canonicalize_district
 from app.providers.base import ListingCandidate, ListingSearchCriteria
 
 IMOT_BASE_URL = "https://www.imot.bg/"
@@ -40,7 +40,8 @@ def build_imot_search_url(criteria: ListingSearchCriteria) -> str:
 
     path_parts = ["obiavi", transaction, city]
     if criteria.district:
-        path_parts.append(_slugify_district(criteria.district))
+        district = canonicalize_district(criteria.district, city=criteria.city)
+        path_parts.append(_slugify_district(district))
 
     room_slug = ROOM_SLUGS.get(criteria.rooms or "")
     property_slug = PROPERTY_PATHS.get(criteria.property_type, {}).get(
@@ -64,7 +65,7 @@ def build_imot_search_url(criteria: ListingSearchCriteria) -> str:
 
 
 def parse_imot_listing_cards(
-    html: str, *, source: str = "imot.bg"
+    html: str | bytes, *, source: str = "imot.bg"
 ) -> list[ListingCandidate]:
     soup = BeautifulSoup(html, "lxml")
     seen_urls: set[str] = set()
@@ -87,25 +88,26 @@ def _parse_anchor(anchor: Tag, *, source: str) -> ListingCandidate | None:
     if "/obiava-" not in parsed.path:
         return None
 
-    title = _clean_text(anchor)
-    if not title or title.lower() == "\u0441\u043d\u0438\u043c\u043a\u0430":
-        return None
-
-    card = (
-        anchor.find_parent(class_=re.compile(r"(ads2023|listing|card|item)"))
-        or anchor.parent
-    )
+    card = _find_listing_card(anchor)
     if card is None:
         return None
 
+    title = _extract_title(card, anchor)
+    if not title or title.lower() == "\u0441\u043d\u0438\u043c\u043a\u0430":
+        return None
+
     summary = _extract_summary(card)
-    if _looks_sponsored(anchor, card, title, summary):
+    if _looks_sponsored(card, title, summary):
         return None
 
     location_text = _extract_location(card)
     city, district = _split_location(location_text)
     if city is None:
-        city = "Sofia"
+        city = _infer_city(title, summary, url, location_text) or "Sofia"
+    if city == "Sofia" and district is None:
+        district = _infer_sofia_district(title, summary, url, location_text)
+    if city == "Sofia" and district is not None:
+        district = _normalize_district(district, city=city)
 
     external_id = _parse_external_id(parsed.path)
     if external_id is None:
@@ -130,8 +132,46 @@ def _parse_anchor(anchor: Tag, *, source: str) -> ListingCandidate | None:
     )
 
 
+
+
+def _find_listing_card(anchor: Tag) -> Tag | None:
+    for node in [anchor, *anchor.parents]:
+        if not isinstance(node, Tag):
+            continue
+        classes = node.get("class", [])
+        if "item" in classes or "nova-sgrada" in classes:
+            return node
+        if node.name == "div" and (
+            node.select_one(".text")
+            or node.select_one(".price")
+            or node.select_one(".location")
+            or node.select_one("location")
+        ):
+            return node
+    return anchor.parent if isinstance(anchor.parent, Tag) else None
+
+
 def _clean_text(element: Tag) -> str:
     return element.get_text(" ", strip=True).replace(" ", " ").strip()
+
+
+def _extract_title(card: Tag, anchor: Tag) -> str:
+    for selector in [
+        ".text .title",
+        ".text .zaglavie .title",
+        ".text div",
+        ".title",
+        ".zaglavie a",
+    ]:
+        found = card.select_one(selector)
+        if found:
+            text = _clean_text(found)
+            if text:
+                return text
+    text = _clean_text(anchor)
+    if text:
+        return text
+    return _clean_text(card)
 
 
 def _extract_summary(card: Tag) -> str:
@@ -145,6 +185,8 @@ def _extract_summary(card: Tag) -> str:
 
 def _extract_location(card: Tag) -> str:
     for selector in [
+        ".text location",
+        ".text span",
         ".location",
         ".location2023",
         ".adr",
@@ -168,15 +210,16 @@ def _extract_price_text(card: Tag) -> str:
     return match.group(0) if match else ""
 
 
-def _looks_sponsored(anchor: Tag, card: Tag, title: str, summary: str) -> bool:
-    for node in [card, anchor, *card.parents]:
-        classes = node.get("class", []) if isinstance(node, Tag) else []
-        if "nova-sgrada" in classes:
-            return True
+def _looks_sponsored(card: Tag, title: str, summary: str) -> bool:
     haystack = f"{title} {summary} {_clean_text(card)}".lower()
+    for node in [card, *card.parents]:
+        classes = node.get("class", []) if isinstance(node, Tag) else []
+        if "reklama" in classes or "advert" in classes:
+            return True
     return (
         "\u0440\u0435\u043a\u043b\u0430\u043c\u0430" in haystack
         or "sponsored" in haystack
+        or "\u043d\u043e\u0432\u0430 \u0441\u0433\u0440\u0430\u0434\u0430" in haystack
     )
 
 
@@ -316,13 +359,109 @@ def _normalize_city(value: str) -> str:
 def _normalize_district(value: str, *, city: str | None) -> str:
     cleaned = value.strip()
     if city == "Sofia":
-        return canonicalize_district(cleaned, city=city)
+        exact = canonicalize_district(cleaned, city=city)
+        if exact in CITY_OPTIONS["Sofia"]["districts"]:
+            return exact
+        return _match_sofia_district(cleaned) or exact
     return cleaned
 
 
 def _slugify_district(value: str) -> str:
     normalized = _transliterate_bulgarian(value).lower()
     return re.sub(r"[^a-z0-9]+", "-", normalized).strip("-")
+
+
+def _infer_city(
+    title: str,
+    summary: str,
+    url: str,
+    location_text: str,
+) -> str | None:
+    haystack = " ".join([title, summary, url, location_text]).lower()
+    if "grad-sofiya" in haystack or "софия" in haystack or "sofia" in haystack:
+        return "Sofia"
+    if "grad-plovdiv" in haystack or "пловдив" in haystack or "plovdiv" in haystack:
+        return "Plovdiv"
+    if "grad-varna" in haystack or "варна" in haystack or "varna" in haystack:
+        return "Varna"
+    if "grad-burgas" in haystack or "бургас" in haystack or "burgas" in haystack:
+        return "Burgas"
+    return None
+
+
+def _infer_sofia_district(
+    title: str,
+    summary: str,
+    url: str,
+    location_text: str,
+) -> str | None:
+    haystack = " ".join([title, summary, url, location_text]).lower()
+    slug_haystack = _slugify_bulgarian_text(haystack)
+    for district in sorted(CITY_OPTIONS["Sofia"]["districts"], key=len, reverse=True):
+        district_slug = _slugify_district(district)
+        if district.lower() in haystack or district_slug in slug_haystack:
+            return district
+    for alias, canonical in SOFIA_DISTRICT_ALIASES.items():
+        alias_slug = _slugify_district(alias)
+        if alias.lower() in haystack or alias_slug in slug_haystack:
+            return canonical
+    return None
+
+
+def _match_sofia_district(value: str) -> str | None:
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    slug_value = _slugify_district(cleaned)
+    for district in sorted(CITY_OPTIONS["Sofia"]["districts"], key=len, reverse=True):
+        if cleaned.startswith(district):
+            return district
+        district_slug = _slugify_district(district)
+        if slug_value.startswith(district_slug):
+            return district
+    for alias, canonical in SOFIA_DISTRICT_ALIASES.items():
+        alias_slug = _slugify_district(alias)
+        if cleaned.startswith(alias):
+            return canonical
+        if slug_value.startswith(alias_slug):
+            return canonical
+    return None
+
+
+def _slugify_bulgarian_text(value: str) -> str:
+    transliteration_map = {
+        "а": "a",
+        "б": "b",
+        "в": "v",
+        "г": "g",
+        "д": "d",
+        "е": "e",
+        "ж": "zh",
+        "з": "z",
+        "и": "i",
+        "й": "y",
+        "к": "k",
+        "л": "l",
+        "м": "m",
+        "н": "n",
+        "о": "o",
+        "п": "p",
+        "р": "r",
+        "с": "s",
+        "т": "t",
+        "у": "u",
+        "ф": "f",
+        "х": "h",
+        "ц": "ts",
+        "ч": "ch",
+        "ш": "sh",
+        "щ": "sht",
+        "ъ": "a",
+        "ь": "",
+        "ю": "yu",
+        "я": "ya",
+    }
+    return "".join(transliteration_map.get(char, char) for char in value.lower())
 
 
 def _transliterate_bulgarian(value: str) -> str:

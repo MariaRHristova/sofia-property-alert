@@ -31,6 +31,7 @@ def isolated_app_state(
     monkeypatch.setattr(main_module, "engine", test_engine)
     monkeypatch.setattr(main_module, "SessionLocal", test_session_local)
     monkeypatch.setattr(main_module.settings, "email_backend", "preview")
+    monkeypatch.setattr(main_module.settings, "imot_live_enabled", False)
     monkeypatch.setattr(
         main_module.settings,
         "email_preview_dir",

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
-from app.models import ListingMatch, Subscription
+from app.models import Listing, ListingMatch, Subscription
 from app.schemas import SubscriptionCreate
 
 
@@ -54,15 +54,12 @@ class SubscriptionService:
         return list(self.session.scalars(statement))
 
     def deactivate_subscription(self, token: str) -> bool:
-        statement = select(Subscription).where(Subscription.unsubscribe_token == token)
-        subscription = self.session.scalar(statement)
-        if subscription is None:
-            return False
-        subscription.active = False
-        self.session.commit()
-        return True
+        return self._remove_subscription(token)
 
     def delete_subscription(self, token: str) -> bool:
+        return self._remove_subscription(token)
+
+    def _remove_subscription(self, token: str) -> bool:
         statement = select(Subscription).where(Subscription.unsubscribe_token == token)
         subscription = self.session.scalar(statement)
         if subscription is None:
@@ -72,7 +69,14 @@ class SubscriptionService:
                 ListingMatch.subscription_id == subscription.id
             )
         )
+        self.session.flush()
         self.session.delete(subscription)
+        self.session.flush()
+        self.session.execute(
+            delete(Listing).where(
+                ~Listing.id.in_(select(ListingMatch.listing_id))
+            )
+        )
         self.session.commit()
         return True
 

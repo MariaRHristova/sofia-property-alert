@@ -102,6 +102,19 @@ class JobService:
         statement = select(JobRun).order_by(JobRun.started_at.desc()).limit(limit)
         return list(self.session.scalars(statement))
 
+    def persist_subscription_preview(
+        self,
+        subscription_id: int,
+        listings: list[ListingCandidate],
+    ) -> int:
+        created = 0
+        for candidate in listings:
+            listing = self._upsert_listing(candidate)
+            if self._create_match(subscription_id, listing.id):
+                created += 1
+        self.session.commit()
+        return created
+
     def _upsert_listing(self, candidate: ListingCandidate) -> Listing:
         statement = select(Listing).where(
             Listing.source == candidate.source,

@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 
 import app.main as main_module
 from app.main import app
-from app.models import ListingMatch
+from app.models import Listing, ListingMatch
 
 
 def test_health_endpoint_returns_ok() -> None:
@@ -41,6 +41,17 @@ def test_root_endpoint_renders_poc_page() -> None:
     assert "Create a subscription" in response.text
 
 
+def test_root_endpoint_renders_in_live_mode(monkeypatch) -> None:
+    monkeypatch.setattr(main_module.settings, "imot_live_enabled", True)
+    monkeypatch.setattr(main_module, "load_listings_for_subscriptions", lambda *_: [])
+
+    with TestClient(app) as client:
+        response = client.get("/")
+
+    assert response.status_code == 200
+    assert "Bulgaria Property Alert" in response.text
+
+
 def test_create_subscription_returns_preview_count() -> None:
     payload = {
         "email": "route@example.com",
@@ -63,13 +74,13 @@ def test_create_subscription_returns_preview_count() -> None:
     assert "Delete permanently" in page_response.text
 
 
-def test_delete_subscription_removes_it_and_its_matches(monkeypatch) -> None:
+def test_unsubscribe_removes_it_and_allows_resubscribe(monkeypatch) -> None:
     payload = {
         "email": "delete@example.com",
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["Лозенец"],
+        "districts": ["??????????????"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",
@@ -90,23 +101,25 @@ def test_delete_subscription_removes_it_and_its_matches(monkeypatch) -> None:
                 .where(ListingMatch.subscription_id == subscription_id)
             )
         unsubscribe_response = client.post(unsubscribe_url)
+        resubscribe_response = client.post("/subscriptions", json=payload)
         delete_response = client.delete(delete_url)
-        missing_response = client.delete(delete_url)
         page_response = client.get("/")
 
     assert match_count == 1
     assert unsubscribe_response.status_code == 200
-    assert delete_response.status_code == 200
-    assert delete_response.json() == {"status": "deleted"}
-    assert missing_response.status_code == 404
-    assert payload["email"] not in page_response.text
+    assert unsubscribe_response.json() == {"status": "unsubscribed"}
+    assert resubscribe_response.status_code == 201
+    assert delete_response.status_code == 404
+    assert payload["email"] in page_response.text
     with main_module.SessionLocal() as session:
         remaining_matches = session.scalar(
             select(func.count())
             .select_from(ListingMatch)
             .where(ListingMatch.subscription_id == subscription_id)
         )
+        remaining_listings = session.scalar(select(func.count()).select_from(Listing))
     assert remaining_matches == 0
+    assert remaining_listings == 0
 
 
 def test_job_run_records_job_summary(monkeypatch) -> None:
@@ -147,7 +160,7 @@ def test_daily_job_runs_for_subscription_email(monkeypatch) -> None:
     assert create_response.json()["email"] == payload["email"]
     assert create_response.json()["preview_match_count"] == 1
     assert job_response.status_code == 200
-    assert job_response.json()["matches_created"] >= 1
+    assert job_response.json()["listings_seen"] > 0
     assert recent_response.status_code == 200
     assert recent_response.json()["jobs"][0]["status"] == "finished"
 

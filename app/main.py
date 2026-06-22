@@ -10,15 +10,20 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
+from sqlalchemy import select
 
 from app.catalog import CITY_OPTIONS, PROPERTY_TYPES, ROOM_OPTIONS, TRANSACTION_TYPES
 from app.config import get_settings
 from app.db import Base, SessionLocal, engine
 from app.email.delivery import EmailService
-from app.providers.base import ListingCandidate
-from app.providers.fixtures import FixtureListingProvider
+from app.models import Listing, Subscription
 from app.schemas import SubscriptionCreate
 from app.services.jobs import JobService
+from app.services.listings import (
+    listing_source_label,
+    load_listings_for_subscription,
+    load_listings_for_subscriptions,
+)
 from app.services.preview import PreviewResult, build_preview
 from app.services.subscriptions import SubscriptionService, to_subscription_view
 
@@ -39,31 +44,33 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(title=settings.app_title, lifespan=lifespan)
 
 
-def load_fixture_listings() -> list[ListingCandidate]:
-    provider = FixtureListingProvider(settings.fixture_html_path)
-    fixture_exists = Path(settings.fixture_html_path).exists()
-    return provider.fetch() if fixture_exists else []
-
-
-def load_subscription_previews() -> list[PreviewResult]:
-    listings = load_fixture_listings()
+def load_subscription_state() -> tuple[list[PreviewResult], int]:
     with SessionLocal() as session:
         service = SubscriptionService(session)
         subscriptions = [
             to_subscription_view(item) for item in service.list_subscriptions()
         ]
-    return [build_preview(subscription, listings) for subscription in subscriptions]
+        listings = list(session.scalars(select(Listing)))
+    previews = [build_preview(subscription, listings) for subscription in subscriptions]
+    return previews, len(listings)
 
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request) -> HTMLResponse:
-    fixture_listings = load_fixture_listings()
-    previews = load_subscription_previews()
+    preview_groups, listing_count = load_subscription_state()
     context = {
         "app_name": settings.app_title,
         "city_options_json": json.dumps(CITY_OPTIONS),
-        "fixture_sample_count": len(fixture_listings),
-        "preview_groups": previews,
+        "listing_count": listing_count,
+        "listing_mode_description": (
+            "live imot.bg search"
+            if settings.imot_live_enabled
+            else "local fixture provider"
+        ),
+        "listing_mode_label": (
+            "Live listings" if settings.imot_live_enabled else "Fixture listings"
+        ),
+        "preview_groups": preview_groups,
         "property_types": PROPERTY_TYPES,
         "request": request,
         "room_options": ROOM_OPTIONS,
@@ -88,21 +95,31 @@ async def create_subscription(request: Request) -> JSONResponse:
         service = SubscriptionService(session)
         subscription = service.create_subscription(payload)
         subscription_view = to_subscription_view(subscription)
-        preview = build_preview(subscription_view, load_fixture_listings())
+        preview = build_preview(
+            subscription_view,
+            load_listings_for_subscription(subscription_view, settings),
+        )
+        job_service = JobService(session)
+        job_service.persist_subscription_preview(
+            subscription.id,
+            preview.matches,
+        )
+        response_data = {
+            "active": subscription_view.active,
+            "city": subscription_view.city,
+            "districts": subscription_view.districts,
+            "email": subscription_view.email,
+            "id": subscription_view.id,
+            "initialized": subscription_view.initialized,
+            "preview_match_count": len(preview.matches),
+            "unsubscribe_url": (
+                f"/subscriptions/{subscription_view.unsubscribe_token}/unsubscribe"
+            ),
+        }
 
-    unsubscribe_url = f"/subscriptions/{subscription.unsubscribe_token}/unsubscribe"
     return JSONResponse(
         status_code=201,
-        content={
-            "active": subscription.active,
-            "city": subscription.city,
-            "districts": subscription_view.districts,
-            "email": subscription.email,
-            "id": subscription.id,
-            "initialized": subscription.initialized,
-            "preview_match_count": len(preview.matches),
-            "unsubscribe_url": unsubscribe_url,
-        },
+        content=response_data,
     )
 
 
@@ -136,11 +153,21 @@ def delete_subscription(token: str) -> JSONResponse:
 
 @app.post("/jobs/run")
 def run_job() -> JSONResponse:
-    listings = load_fixture_listings()
     with SessionLocal() as session:
         job_service = JobService(session)
         email_service = EmailService(settings)
-        result = job_service.run_daily_job("fixture", listings, email_service)
+        subscriptions = [
+            to_subscription_view(item)
+            for item in session.scalars(
+                select(Subscription).where(Subscription.active.is_(True))
+            )
+        ]
+        listings = load_listings_for_subscriptions(subscriptions, settings)
+        result = job_service.run_daily_job(
+            listing_source_label(settings),
+            listings,
+            email_service,
+        )
 
     return JSONResponse(
         status_code=200,

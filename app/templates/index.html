@@ -229,12 +229,11 @@
             <p class="eyebrow">Minimal working PoC</p>
             <h1>Daily property alerts for Bulgaria.</h1>
             <p>
-              Create a subscription, store it locally, and preview matching listings from the fixture-backed
-              parser before we enable live collection or real email delivery.
+              Create a subscription, store it locally, and preview matching listings from the {{ listing_mode_description }}.
             </p>
           </div>
           <div class="metric-grid">
-            <div class="metric">Fixture listings<strong>{{ fixture_sample_count }}</strong></div>
+            <div class="metric">{{ listing_mode_label }}<strong>{{ listing_count }}</strong></div>
             <div class="metric">Stored subscriptions<strong>{{ preview_groups | length }}</strong></div>
           </div>
         </div>
@@ -244,7 +243,7 @@
         <section class="panel">
           <h2>Create a subscription</h2>
           <p class="muted-copy">
-            This PoC saves the subscription in SQLite and immediately previews which fixture listings match.
+            This PoC saves the subscription in SQLite and immediately previews which listings match.
           </p>
 
           <form id="subscription-form">
@@ -319,7 +318,7 @@
         <section class="panel">
           <h2>Stored subscriptions and preview matches</h2>
           <p class="muted-copy">
-            Each card below is real persisted data matched against the local fixture provider.
+            Each card below is real persisted data matched against the current listing source.
           </p>
 
           <div style="margin-bottom: 16px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
@@ -360,7 +359,7 @@
                 {% endfor %}
               </div>
               {% else %}
-              <div class="empty" style="margin-bottom: 12px;">No fixture listing matches this subscription yet.</div>
+              <div class="empty" style="margin-bottom: 12px;">No matching listings found yet.</div>
               {% endif %}
 
               {% if group.subscription.active %}
@@ -481,7 +480,7 @@
         }
 
         const data = await response.json();
-        showMessage(`Saved. ${data.preview_match_count} fixture matches found. Reloading...`, "success");
+        showMessage(`Saved. ${data.preview_match_count} matching listings found. Reloading...`, "success");
         window.setTimeout(() => window.location.reload(), 500);
       });
 

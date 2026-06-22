@@ -14,7 +14,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 | --- | --- | --- |
 | UI and validation | In progress | `app/main.py`, `app/templates/index.html`, `app/schemas.py`, `tests/test_app_routes.py` |
 | Database layer | In progress | `app/models.py`, `app/db.py`, `app/services/subscriptions.py` |
-| Listing provider and parsing | In progress | `app/providers/`, `tests/test_fixture_parser.py` |
+| Listing provider and parsing | Complete | `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `tests/test_fixture_parser.py` |
 | Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
 | Scheduler | Not started | TODO |
 | Email delivery | In progress | `app/email/delivery.py`, `app/services/jobs.py`, `tests/test_email_digest.py` |
@@ -121,6 +121,30 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Challenges and learning:** The failure only appeared when the request validation path was exercised, so the happy-path subscription tests had not exposed it earlier.
 - **Evidence:** `app/main.py`, `tests/test_app_routes.py`, and the verification commands above.
 
+
+### 2026-06-22 - Live imot.bg search with paginated provider loading
+
+- **Outcome:** Switched the application from fixture-only listing loading to live imot.bg search when `IMOT_LIVE_ENABLED=true`, while keeping fixture mode for deterministic tests. The live provider now follows `rel="next"` pagination links and the parser keeps Sofia districts normalized even when the live card includes street text in the same block.
+- **Approach and reasoning:** Kept the provider boundary intact by adding a small listing-loading service that builds search criteria from subscriptions, opens an `httpx` client only for live mode, and deduplicates listings across repeated criteria. The parser now targets the real `div.item` and `div.nova-sgrada` card layouts instead of the old fixture shortcut, and it skips only the placeholder `???? ??????` content that was causing false positives in the fixture sample.
+- **AI-assisted workflow:** I asked Codex to make the app search the site live after the district-matching bug report. Codex inspected the live imot.bg HTML, discovered that the response body must be decoded from `response.content` rather than `response.text`, rewired the routes through a new live-aware listing service, updated the homepage copy, and added regression tests for the live-style card structure and pagination.
+- **AI tool choice:** Codex was used because the fix crossed parsing, provider I/O, route wiring, environment configuration, and tests in one local workspace.
+- **Key prompts:** "I want the app to search the site live."; "Try subscribe to mhristova27@gmail.com for Sale, apartments in Sofia ??????? distict for minimum of 100 000 Euros."; "For Sofia the discticts are given in the HTML here "https://www.imot.bg/search/prodazhbi/grad-sofiya""
+- **Validation:** Ran `python -m pytest tests/test_fixture_parser.py -q` with `5 passed`. Ran `python -m pytest -q` with `15 passed`. Ran `python -m ruff check app tests` with `All checks passed!`. Also verified a live `requests.get` against the imot.bg Sofia search page and confirmed the server reports `ISO-8859-1` with `apparent_encoding` `Windows-1251`, which explained why the provider must parse `response.content`.
+- **Challenges and learning:** The live site reuses the `nova-sgrada` class for real listings, so the original sponsored-card heuristic was too aggressive. The safer rule is to skip only the explicit placeholder/banner content while keeping real live new-building cards. The request encoding on Windows also made a few inline test literals look corrupted until I switched to explicit Unicode escapes in the regression tests.
+- **Evidence:** `app/main.py`, `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `app/templates/index.html`, `tests/conftest.py`, `tests/test_fixture_parser.py`, `.env`, and the verified command outputs above.
+
+
+### 2026-06-22 - Live-mode homepage made non-blocking
+
+- **Outcome:** Fixed the localhost startup failure by stopping the homepage from synchronously fetching live imot.bg results on every GET `/` render. In live mode, the page now shows persisted subscriptions and a database-backed listing count instead of waiting on live crawling.
+- **Approach and reasoning:** The live fetch belongs in explicit actions such as subscription preview and manual job runs, not in a normal page render. Moving the live scraper out of the homepage keeps the UI responsive and prevents the app from failing or hanging when the live site is slow or restrictive.
+- **AI-assisted workflow:** After the user reported an internal server error, I reproduced the traceback, traced it to live search URL generation and homepage rendering, then changed the live loader to fetch city-level results for explicit actions and made the homepage skip live crawling entirely.
+- **AI tool choice:** Codex was used because the issue touched request handling, live-provider behavior, and verification in the same workspace.
+- **Key prompts:** "Now the local host gives me internal server error."; Reconstructed prompt: "Make the homepage stop crashing in live mode."
+- **Validation:** `TestClient(app).get('/')` returned `status 200` after the fix. The focused route suite passed with `9 passed`, the full suite passed with `17 passed`, and `python -m ruff check app tests` reported `All checks passed!`.
+- **Challenges and learning:** A direct live fetch from the homepage was too expensive for normal rendering, especially with active subscriptions in the local database. Keeping live search in the explicit subscription/job flows while making the homepage read-only solved the responsiveness problem without giving up the live provider.
+- **Evidence:** `app/main.py`, `app/services/listings.py`, `tests/test_app_routes.py`, and the verified command outputs above.
+
 ## Challenges and tool comparison notes
 
 - Repository setup required a fallback from unavailable GitHub CLI/browser automation to Git Credential Manager.
@@ -175,3 +199,14 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** Ran `python -m pytest -q` and the full suite passed with `12 passed in 1.44s` after the catalog/template refactor.
 - **Challenges and learning:** The first pass needed careful alignment between machine-readable filter values and user-facing labels, especially for cities and room categories. Keeping one canonical catalog in `app/catalog.py` prevented the UI and validation from drifting apart.
 - **Evidence:** `app/catalog.py`, `app/schemas.py`, `app/main.py`, `app/templates/index.html`, `app/providers/parsers.py`, `tests/test_fixture_parser.py`, and the test output from `python -m pytest -q`.
+
+### 2026-06-22 - Live save and delete flow stabilized for localhost
+
+- **Outcome:** Fixed the save-subscription 500 by returning response data from the open session and disabling proxy inheritance for the live `httpx` provider. Live subscription saves now persist preview matches immediately, and permanent deletion removes the subscription's matches before orphan listings are cleaned up.
+- **Approach and reasoning:** The create route was still touching ORM attributes after the session closed, and the live provider was failing against a local proxy setting. I moved the response payload assembly inside the session block, added `trust_env=False` to the live `httpx` client, and flushed the deleted match rows before running orphan cleanup so the listing table reflects the removal correctly.
+- **AI-assisted workflow:** Codex reproduced the 500 through the live route, traced the failure to `httpx.ConnectError` in the imot.bg fetch path, patched the provider and subscription flow, reran the route suite, and validated the localhost workflow with direct HTTP requests against the running server.
+- **AI tool choice:** Codex was used because the bug crossed the live provider, persistence layer, and request/response boundary in the same workspace.
+- **Key prompts:** "Now When I choose the search criteria and click on save scubsriptions. The mathches show, but when the subscription is saved it says no matching listsings found yet. Also when I delete a subscriptipon and the live listings stays the same number and it should be deleted."; "Now When I choose the search criteria and click on save scubsriptions. The mathches show, but when the subscription is saved it says no matching listsings found yet."
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `python -m pytest -q` with `17 passed`. Ran `python -m ruff check app tests` with `All checks passed!`. Verified the running localhost app on port `8004` returned `201` for a live subscription save, showed `preview_match_count: 15`, cleared the empty-state message, returned `200` on delete, and left `remaining_matches: 0` for the deleted subscription.
+- **Challenges and learning:** The local environment had a proxy configuration that `httpx` was honoring, which caused the live search fetch to fail even though direct shell requests to imot.bg worked. Disabling inherited proxy settings for this provider made the live path consistent with the rest of the app.
+- **Evidence:** `app/main.py`, `app/services/listings.py`, `app/services/subscriptions.py`, `docs/exam-journal.md`, and the verified localhost HTTP results.
