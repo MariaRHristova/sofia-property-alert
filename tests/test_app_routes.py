@@ -32,14 +32,36 @@ def test_create_subscription_rejects_invalid_district() -> None:
     )
 
 
+def test_create_subscription_rejects_non_sofia_city() -> None:
+    payload = {
+        "email": "invalid@example.com",
+        "transaction_type": "sale",
+        "property_type": "apartment",
+        "city": "Plovdiv",
+        "districts": [],
+    }
+
+    with TestClient(app) as client:
+        response = client.post("/subscriptions", json=payload)
+
+    assert response.status_code == 422
+    assert response.json()["errors"][0]["msg"] == "Value error, Unsupported city."
+
+
 def test_root_endpoint_renders_editorial_property_alert_page() -> None:
     with TestClient(app) as client:
         response = client.get("/")
         stylesheet_response = client.get("/static/app.css")
 
     assert response.status_code == 200
-    assert "Bulgaria Property Alert" in response.text
+    assert "Property Finder" in response.text
+    assert "Sofia edition" in response.text
     assert "Create an alert" in response.text
+    assert "This proof of concept currently supports Sofia only." in response.text
+    assert (
+        "Preparing your digest and checking Sofia for new listings..."
+        in response.text
+    )
     assert 'href="#main-content"' in response.text
     assert '<main id="main-content">' in response.text
     assert 'autocomplete="email"' in response.text
@@ -57,7 +79,8 @@ def test_root_endpoint_renders_in_live_mode(monkeypatch) -> None:
         response = client.get("/")
 
     assert response.status_code == 200
-    assert "Bulgaria Property Alert" in response.text
+    assert "Property Finder" in response.text
+    assert "Sofia edition" in response.text
 
 
 def test_create_subscription_returns_preview_count() -> None:
@@ -66,7 +89,7 @@ def test_create_subscription_returns_preview_count() -> None:
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["Лозенец"],
+        "districts": ["Lozenets"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",
@@ -88,7 +111,7 @@ def test_email_unsubscribe_removes_saved_alert(monkeypatch) -> None:
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["Лозенец"],
+        "districts": ["Lozenets"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",
@@ -150,7 +173,7 @@ def test_daily_job_runs_for_subscription_email(monkeypatch) -> None:
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["Лозенец"],
+        "districts": ["Lozenets"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",
@@ -184,7 +207,7 @@ def test_job_run_surfaces_smtp_delivery_error(monkeypatch) -> None:
         "transaction_type": "sale",
         "property_type": "apartment",
         "city": "Sofia",
-        "districts": ["Лозенец"],
+        "districts": ["Lozenets"],
         "min_price_eur": 200000,
         "max_price_eur": 300000,
         "rooms": "2",

@@ -14,7 +14,7 @@ def make_subscription() -> SubscriptionView:
         transaction_type="sale",
         property_type="apartment",
         city="Sofia",
-        districts=["Лозенец"],
+        districts=["Lozenets"],
         min_price_eur=200000,
         max_price_eur=300000,
         rooms="2",
@@ -33,9 +33,12 @@ def test_build_digest_uses_clear_empty_state_copy() -> None:
     )
 
     assert "No available listings in Sofia" in digest.subject
+    assert digest.subject.startswith("Sofia Property Alert")
     assert "There are no available listings" in digest.text
     assert "Criteria: Sofia, sale, apartment" in digest.text
-    assert "Subscription" in digest.html
+    assert "Sofia Property Alert digest" in digest.html
+    assert "Property Finder" in digest.html
+    assert "Saved search" in digest.html
     assert "No matches yet" in digest.html
     assert "Matched listings" in digest.html
     assert "Unsubscribe" in digest.html
@@ -70,6 +73,7 @@ def test_build_digest_renders_distinct_listing_cards() -> None:
     assert "Lozenets skyline apartment" in digest.html
     assert "Central family flat" in digest.html
     assert "245 000" in digest.html
+    assert "Look closer. Your next place is already on the map." in digest.html
     assert "198 000" in digest.html
 
 

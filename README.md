@@ -1,13 +1,13 @@
-﻿# Bulgaria Property Alert
+﻿# Sofia Property Alert
 
-Bulgaria Property Alert is a FastAPI web application that lets a user define real-estate search criteria for major Bulgarian cities and receive a daily digest of newly discovered matching listings.
+Sofia Property Alert is a FastAPI web application that lets a user define real-estate search criteria for Sofia and receive a daily digest of newly discovered matching listings from imot.bg.
 
 The project is built as an exam-friendly MVP with a fixture-backed parsing flow for deterministic tests and a live `imot.bg` integration path behind configuration.
 
 ## What the app does
 
 - Create a property-search subscription
-- Filter by city, preferred district, transaction type, property type, price, rooms, and minimum area
+- Filter by Sofia district, transaction type, property type, price, rooms, and minimum area
 - Parse and normalize listings from `imot.bg`-style result pages
 - Match new listings against saved subscriptions without resending duplicates
 - Render email digests separately from delivery

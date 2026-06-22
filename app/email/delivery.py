@@ -1,4 +1,5 @@
-﻿from __future__ import annotations
+# ruff: noqa: E501
+from __future__ import annotations
 
 import smtplib
 from dataclasses import dataclass
@@ -39,8 +40,8 @@ def build_digest(
 
 def _build_subject(subscription: SubscriptionView, match_count: int) -> str:
     if match_count == 0:
-        return f"Bulgaria Property Alert - No available listings in {subscription.city}"
-    return f"Bulgaria Property Alert - {subscription.city} digest ({match_count})"
+        return f"Sofia Property Alert - No available listings in {subscription.city}"
+    return f"Sofia Property Alert - {subscription.city} digest ({match_count})"
 
 
 def _build_text(
@@ -51,12 +52,12 @@ def _build_text(
     lines: list[str]
     if not matches:
         lines = [
-            "Bulgaria Property Alert",
+            "Sofia Property Alert",
             "",
             f"Hello {subscription.email},",
             "",
             "There are no available listings for your saved criteria today.",
-            "We will keep checking and send the next digest when matches appear.",
+            "We will keep checking Sofia and send the next digest when matches appear.",
             "",
             (
                 f"Criteria: {subscription.city}, "
@@ -65,7 +66,7 @@ def _build_text(
         ]
     else:
         lines = [
-            "Bulgaria Property Alert",
+            "Sofia Property Alert",
             "",
             f"Hello {subscription.email},",
             "",
@@ -96,35 +97,43 @@ def _build_html(
         else f"We found {match_count} matching listings for your alert."
     )
     status_label = "No matches yet" if not has_matches else f"{match_count} matches found"
-    status_bg = "#ecfeff" if not has_matches else "#dcfce7"
-    status_fg = "#155e75" if not has_matches else "#166534"
+    status_bg = "#fff1ed" if not has_matches else "#ccebf3"
+    status_fg = "#a12820" if not has_matches else "#0877a5"
     listing_section = _build_listing_rows(matches)
     unsubscribe_cta = ""
     if unsubscribe_url:
         unsubscribe_cta = (
-            "<div style='margin-top:16px;padding-top:16px;border-top:1px solid #dbe3ef;'>"
-            f"<a href='{escape(unsubscribe_url)}' style='display:inline-block;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:999px;padding:11px 16px;font-size:13px;font-weight:700;'>Unsubscribe</a>"
-            "<p style='margin:10px 0 0;color:#64748b;font-size:12px;line-height:1.5;'>This will remove the alert from your saved alerts in the app.</p>"
+            "<div style='margin-top:18px;padding-top:18px;border-top:2px solid #181717;'>"
+            "<div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:10px;'>Manage alert</div>"
+            f"<a href='{escape(unsubscribe_url)}' style='display:inline-block;background:#181717;color:#fffaf0;text-decoration:none;border:2px solid #181717;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:700;'>Unsubscribe</a>"
+            "<p style='margin:10px 0 0;color:#5f5a55;font-size:12px;line-height:1.6;'>This will remove the alert from your saved searches in the Sofia dashboard.</p>"
             "</div>"
         )
 
     return f"""<html>
-  <body style='margin:0;background:#eef2f7;padding:24px 0;font-family:Inter,Segoe UI,Arial,sans-serif;color:#0f172a;'>
+  <body style='margin:0;background:#fffaf0;padding:24px 0;font-family:Arial,Helvetica,sans-serif;color:#181717;'>
     <div style='max-width:760px;margin:0 auto;padding:0 16px;'>
-      <div style='background:linear-gradient(135deg,#0f172a 0%,#1d4ed8 100%);border-radius:24px;padding:28px;color:#ffffff;box-shadow:0 18px 48px rgba(15,23,42,0.2);'>
-        <div style='font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.8;margin-bottom:12px;'>Bulgaria Property Alert</div>
-        <h1 style='margin:0 0 10px;font-size:28px;line-height:1.15;'>Your daily property digest</h1>
-        <p style='margin:0;max-width:58ch;font-size:15px;line-height:1.7;opacity:.92;'>Hello {escape(subscription.email)}, {escape(hero_copy)}</p>
+      <div style='border:2px solid #181717;border-radius:26px;overflow:hidden;background:#1597c7;box-shadow:8px 8px 0 #f2b6bd;'>
+        <div style='display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 24px 10px;border-bottom:2px solid #181717;background:#fffaf0;color:#181717;'>
+          <span style='padding-top:2px;font-family:Georgia,Times New Roman,serif;font-size:18px;'>The</span>
+          <strong style='font-family:Georgia,Times New Roman,serif;font-size:44px;font-weight:400;line-height:.9;letter-spacing:-.07em;text-align:center;text-transform:uppercase;'>Property Finder</strong>
+          <small style='padding-top:4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;'>Sofia edition</small>
+        </div>
+        <div style='padding:28px 24px 26px;'>
+          <div style='display:inline-block;margin-bottom:14px;padding:7px 11px;border:1.5px solid #181717;border-radius:999px;background:#fffaf0;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;'>Sofia Property Alert digest</div>
+          <h1 style='margin:0 0 12px;font-family:Georgia,Times New Roman,serif;font-size:34px;font-weight:400;line-height:1;color:#181717;'>Look closer. Your next place is already on the map.</h1>
+          <p style='margin:0;max-width:58ch;font-size:15px;line-height:1.7;color:#181717;'>Hello {escape(subscription.email)}, {escape(hero_copy)}</p>
+        </div>
       </div>
 
-      <div style='margin-top:18px;background:#ffffff;border:1px solid #dbe3ef;border-radius:24px;padding:22px;box-shadow:0 12px 32px rgba(15,23,42,0.08);'>
+      <div style='margin-top:18px;border:2px solid #181717;border-radius:26px;background:#fffef8;padding:22px;box-shadow:8px 8px 0 #ccebf3;'>
         <div style='display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:flex-start;'>
           <div>
-            <div style='font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#64748b;margin-bottom:3px;'>Subscription</div>
-            <div style='font-size:20px;font-weight:700;color:#0f172a;'>{escape(subscription.city)} · {escape(subscription.property_type.title())}</div>
-            <div style='margin-top:6px;color:#475569;line-height:1.6;'>{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
+            <div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Saved search</div>
+            <div style='font-family:Georgia,Times New Roman,serif;font-size:30px;line-height:1;color:#181717;'>{escape(subscription.city)} &middot; {escape(subscription.property_type.title())}</div>
+            <div style='margin-top:8px;color:#5f5a55;line-height:1.6;'>{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
           </div>
-          <div style='display:inline-flex;align-items:center;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;background:{status_bg};color:{status_fg};'>{escape(status_label)}</div>
+          <div style='display:inline-flex;align-items:center;border:1.5px solid #181717;border-radius:999px;padding:9px 14px;font-size:13px;font-weight:700;background:{status_bg};color:{status_fg};'>{escape(status_label)}</div>
         </div>
 
         <div style='margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;'>{_build_subscription_badges(subscription)}</div>
@@ -132,7 +141,7 @@ def _build_html(
       </div>
 
       <div style='margin-top:18px;'>
-        <div style='font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#64748b;margin:0 0 10px 4px;'>Matched listings</div>
+        <div style='margin:0 0 10px 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;'>Matched listings</div>
         {listing_section}
       </div>
     </div>
@@ -154,11 +163,11 @@ def _build_subscription_badges(subscription: SubscriptionView) -> str:
         min_price = _format_currency(subscription.min_price_eur)
         max_price = _format_currency(subscription.max_price_eur)
         if min_price and max_price:
-            badges.append(_badge(f"€{min_price} - €{max_price}", "accent"))
+            badges.append(_badge(f"EUR {min_price} - EUR {max_price}", "accent"))
         elif min_price:
-            badges.append(_badge(f"From €{min_price}", "accent"))
+            badges.append(_badge(f"From EUR {min_price}", "accent"))
         elif max_price:
-            badges.append(_badge(f"Up to €{max_price}", "accent"))
+            badges.append(_badge(f"Up to EUR {max_price}", "accent"))
     if subscription.min_area_sqm is not None:
         badges.append(_badge(f"Min {subscription.min_area_sqm:.0f} sq.m", "accent"))
     return "".join(badges)
@@ -167,8 +176,8 @@ def _build_subscription_badges(subscription: SubscriptionView) -> str:
 def _build_listing_rows(matches: list[dict[str, object]]) -> str:
     if not matches:
         return (
-            "<div style='background:#ffffff;border:1px dashed #cbd5e1;border-radius:20px;padding:14px 16px;color:#64748b;line-height:1.6;font-size:14px;'>"
-            "No listings matched this subscription today. We will keep monitoring and send the next digest when a fit appears."
+            "<div style='border:2px dashed #181717;border-radius:16px;background:#fffef8;padding:20px 22px;color:#5f5a55;font-family:Georgia,Times New Roman,serif;line-height:1.6;font-size:15px;'>"
+            "No listings matched this subscription today. We will keep monitoring Sofia and send the next digest when a fit appears."
             "</div>"
         )
 
@@ -183,17 +192,17 @@ def _build_listing_rows(matches: list[dict[str, object]]) -> str:
         area = _format_number(match.get("area_sqm"))
         rows.append(
             f"""<tr>
-  <td style='padding:0 0 8px;'>
-    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #dbe3ef;border-radius:16px;overflow:hidden;'>
+  <td style='padding:0 0 10px;'>
+    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;border:2px solid #181717;border-radius:16px;overflow:hidden;background:#fffef8;'>
       <tr>
-        <td style='padding:12px 14px 10px;vertical-align:top;'>
-          <div style='font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#64748b;margin-bottom:3px;'>Listing {index}</div>
-          <div style='font-size:15px;font-weight:700;line-height:1.25;color:#0f172a;margin-bottom:3px;'><a href='{url}' style='color:#0f172a;text-decoration:none;'>{title}</a></div>
-          <div style='font-size:13px;line-height:1.35;color:#475569;'>{city}{district_text}</div>
+        <td style='padding:14px 14px 12px;vertical-align:top;'>
+          <div style='font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Listing {index}</div>
+          <div style='font-size:16px;font-weight:700;line-height:1.3;color:#181717;margin-bottom:4px;'><a href='{url}' style='color:#181717;text-decoration:underline;text-underline-offset:4px;'>{title}</a></div>
+          <div style='font-size:13px;line-height:1.45;color:#5f5a55;'>{city}{district_text}</div>
         </td>
-        <td style='padding:12px 14px 10px;vertical-align:top;text-align:right;white-space:nowrap;'>
-          <div style='display:inline-block;background:#eff6ff;color:#1d4ed8;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;margin-bottom:4px;'>€{price}</div>
-          <div style='display:block;color:#64748b;font-size:12px;'>{area} sq.m</div>
+        <td style='padding:14px 14px 12px;vertical-align:top;text-align:right;white-space:nowrap;'>
+          <div style='display:inline-block;background:#f2b6bd;color:#181717;border:1.5px solid #181717;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;margin-bottom:6px;'>EUR {price}</div>
+          <div style='display:block;color:#5f5a55;font-size:12px;'>{area} sq.m</div>
         </td>
       </tr>
     </table>
@@ -209,13 +218,13 @@ def _build_listing_rows(matches: list[dict[str, object]]) -> str:
 
 def _badge(label: str, tone: str) -> str:
     styles = {
-        "primary": "background:#0f172a;color:#ffffff;border:1px solid #0f172a;",
-        "neutral": "background:#f1f5f9;color:#0f172a;border:1px solid #dbe3ef;",
-        "accent": "background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;",
+        "primary": "background:#181717;color:#fffaf0;border:1.5px solid #181717;",
+        "neutral": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
+        "accent": "background:#fae2e3;color:#181717;border:1.5px solid #181717;",
     }
     return (
         f"<span style='display:inline-flex;align-items:center;border-radius:999px;"
-        f"padding:8px 12px;font-size:13px;font-weight:600;line-height:1;{styles[tone]}'>"
+        f"padding:8px 12px;font-size:13px;font-weight:700;line-height:1;{styles[tone]}'>"
         f"{escape(label)}</span>"
     )
 

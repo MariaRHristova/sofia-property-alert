@@ -30,6 +30,7 @@ EmailService = email_delivery.EmailService
 load_listings_for_subscriptions = listings_service.load_listings_for_subscriptions
 
 settings = get_settings()
+APP_NAME = "Sofia Property Alert"
 templates = Jinja2Templates(directory="app/templates")
 
 scheduler_manager = AppScheduler(
@@ -53,7 +54,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         scheduler_manager.shutdown()
 
 
-app = FastAPI(title=settings.app_title, lifespan=lifespan)
+app = FastAPI(title=APP_NAME, lifespan=lifespan)
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 
@@ -79,7 +80,7 @@ def load_scheduler_config() -> dict[str, object]:
 def read_root(request: Request) -> HTMLResponse:
     preview_groups, listing_count = load_subscription_state()
     context = {
-        "app_name": settings.app_title,
+        "app_name": APP_NAME,
         "city_options_json": json.dumps(CITY_OPTIONS),
         "listing_count": listing_count,
         "listing_mode_description": (

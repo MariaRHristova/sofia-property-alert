@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ app_name }}</title>
-    <meta name="description" content="Create property alerts for homes across Bulgaria and receive new matching listings automatically." />
+    <meta name="description" content="Create property alerts for homes in Sofia and receive new matching listings automatically." />
     <link rel="stylesheet" href="/static/app.css" />
   </head>
   <body>
@@ -18,7 +18,7 @@
               <path d="M8 10.5h8" />
             </svg>
           </span>
-          <span><strong>{{ app_name }}</strong><small>A city property journal</small></span>
+          <span><strong>{{ app_name }}</strong><small>Sofia property journal</small></span>
         </a>
         <nav class="site-nav" aria-label="Dashboard navigation">
           <a href="#create-alert">Create alert</a>
@@ -42,7 +42,7 @@
             </p>
             <h1 id="page-title">Look closer. Your next place is already on the map.</h1>
             <p class="hero-copy">
-              Describe the home you have in mind. We watch the {{ listing_mode_description }} and collect the places worth seeing.
+              Describe the home you have in mind in Sofia. We watch the {{ listing_mode_description }} and collect the places worth seeing.
             </p>
             <a class="text-link" href="#create-alert">Start your search <span aria-hidden="true">&rarr;</span></a>
           </div>
@@ -69,7 +69,7 @@
             <span>Searches kept</span>
             <strong>{{ preview_groups | length }}</strong>
           </div>
-          <p class="hero-note">A quiet daily edit of homes across Bulgaria, shaped around your criteria.</p>
+          <p class="hero-note">A quiet daily edit of homes in Sofia, shaped around your criteria.</p>
         </div>
       </section>
 
@@ -119,7 +119,8 @@
                 </label>
                 <label>
                   <span class="label-text">City</span>
-                  <select name="city" id="city-select" required></select>
+                  <select name="city" id="city-select" aria-describedby="city-help" required></select>
+                  <span class="field-help" id="city-help">This proof of concept currently supports Sofia only.</span>
                 </label>
                 <label>
                   <span class="label-text">Rooms</span>
@@ -176,7 +177,7 @@
               <div>
                 <p class="section-kicker">Automatic monitoring</p>
                 <h2 id="automation-title">Scheduler settings</h2>
-                <p class="section-intro">Choose one app-wide schedule for automated property searches.</p>
+                <p class="section-intro">Choose one app-wide schedule for automated Sofia property searches.</p>
               </div>
               <div class="scheduler-meta" aria-label="Scheduler status">
                 <span class="pill">Mode: <span id="scheduler-mode-pill">{{ scheduler_config.mode }}</span></span>
@@ -223,8 +224,8 @@
                 <p class="section-intro">Review saved criteria and the latest matching properties for each alert.</p>
               </div>
               <div class="section-actions section-actions--compact">
-                <button id="run-job-button" class="primary" type="button">Run daily job</button>
-                <span class="muted-copy">Check for new matches now.</span>
+                <button id="run-job-button" class="primary" type="button" data-default-label="Run daily job" data-busy-label="Preparing your digest...">Run daily job</button>
+                <span class="muted-copy">Check for new Sofia matches now.</span>
               </div>
             </div>
 
@@ -387,7 +388,7 @@
       form.addEventListener("submit", async (event) => {
         event.preventDefault();
         setBusyState(subscriptionSaveButton, true, subscriptionSaveButton?.dataset.busyLabel || "Searching listings...");
-        showMessage("Searching listings for your selected criteria...", "success");
+        showMessage("Searching Sofia listings for your selected criteria...", "success");
 
         try {
           const formData = new FormData(form);
@@ -461,29 +462,36 @@
       });
 
       runJobButton.addEventListener("click", async () => {
+        setBusyState(runJobButton, true, runJobButton?.dataset.busyLabel || "Preparing your digest...");
+        showMessage("Preparing your digest and checking Sofia for new listings...", "success");
         try {
           const response = await fetch("/jobs/run", { method: "POST" });
           if (!response.ok) {
             const data = await response.json().catch(() => ({}));
             showMessage(data.error || "Could not run the daily job.", "error");
+            setBusyState(runJobButton, false);
             return;
           }
           const data = await response.json();
           if (data.email_errors?.length) {
             showMessage(`Daily job finished, but no email was delivered. ${data.email_errors[0]}`, "error");
             await refreshJobRuns();
+            setBusyState(runJobButton, false);
             return;
           }
           if (data.email_backend === "preview") {
             showMessage("Daily job finished in preview mode. A local .eml file was created; no email was sent.", "success");
             await refreshJobRuns();
+            setBusyState(runJobButton, false);
             return;
           }
-          showMessage(`Daily job finished. ${data.emails_sent} email(s) sent. Reloading...`, "success");
+          showMessage(`Digest ready. ${data.emails_sent} email(s) sent. Reloading...`, "success");
           await refreshJobRuns();
+          setBusyState(runJobButton, false);
           window.setTimeout(() => window.location.reload(), 500);
         } catch (error) {
           showMessage(`Could not run the daily job. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
+          setBusyState(runJobButton, false);
         }
       });
 

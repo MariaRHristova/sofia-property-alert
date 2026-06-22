@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    app_title: str = "Bulgaria Property Alert"
+    app_title: str = "Sofia Property Alert"
     app_base_url: str = "http://127.0.0.1:8000"
     app_timezone: str = "Europe/Sofia"
     database_url: str = "sqlite:///./var/bulgaria-property-alert.db"
