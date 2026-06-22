@@ -12,7 +12,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 
 | Module | Status | Strongest evidence |
 | --- | --- | --- |
-| UI and validation | In progress | `app/main.py`, `app/templates/index.html`, `app/schemas.py`, `tests/test_app_routes.py` |
+| UI and validation | Complete | `app/main.py`, `app/templates/index.html`, `app/static/app.css`, `app/schemas.py`, `tests/test_app_routes.py` |
 | Database layer | In progress | `app/models.py`, `app/db.py`, `app/services/subscriptions.py` |
 | Listing provider and parsing | Complete | `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `tests/test_fixture_parser.py` |
 | Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
@@ -299,3 +299,14 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` with `22 passed` and one upstream Starlette deprecation warning. Ran focused Ruff checks for the affected Python tests/routes with `All checks passed!`. Verified the homepage visually at a 1440px desktop width in the in-app Browser and at a 500px responsive width in headless Chrome; section stacking, full-width controls, focus styling, and card spacing rendered correctly.
 - **Challenges and learning:** The in-app Browser session ignored its temporary mobile viewport override, so the responsive check used local headless Chrome at its reliable 500px minimum viewport. The clean Pytest wrapper also revealed that the default-settings test inherited `EMAIL_PREVIEW_DIR`; the test now removes that environment override before asserting defaults. A full-repository Ruff run still reports pre-existing long HTML-string lines in `app/email/delivery.py`.
 - **Evidence:** `app/templates/index.html`, `app/static/app.css`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, browser verification, and the commands above.
+
+### 2026-06-22 - Sofianer-inspired editorial property experience
+
+- **Outcome:** Replaced the conventional dashboard look with an original editorial property-journal design: an illustrated map-lens cover, oversized serif typography, Sofia-blue and dusty-pink color fields, numbered story sections, tactile borders, and responsive magazine-style property cards.
+- **Approach and reasoning:** Analyzed the user-supplied Sofianer cover for its visual language—bold masthead, cream paper, black ink outlines, blue/pink contrast, map imagery, and print texture—then recreated those principles with original HTML/CSS artwork. The external cover was downloaded only to a temporary local path for analysis and was not shipped in the application.
+- **AI-assisted workflow:** Codex opened and visually inspected the exact reference image, downloaded it to the temporary workspace, translated its design principles into a new hero illustration and page system, verified desktop and mobile screenshots, corrected duplicated live-listing copy, and updated the route test for the new design tokens.
+- **AI tool choice:** Codex and the in-app Browser were used for source inspection, visual analysis, implementation, and live-app verification. Local headless Chrome was used when the textured CSS composition exceeded the in-app screenshot renderer timeout.
+- **Key prompts:** "Ok, I want to to go to this link: https://www.sofianer.com/bg/covers downlaod the image, analyze it and make the web app inspired by the image. I want the design to look modern and sleek. The site not look like a dahboard but to be artsy."; "https://www.sofianer.com/sites/default/files/covers/zdravolina2024.png"
+- **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` with `22 passed` and one upstream Starlette deprecation warning. Ran `.\.venv\Scripts\python.exe -m ruff check tests\test_app_routes.py` with `All checks passed!`. `git diff --check` reported only expected CRLF conversion warnings. Visually verified the app at 1440px desktop and 500px responsive widths with no horizontal overflow.
+- **Challenges and learning:** The first route test run failed because it asserted the retired teal token; the test was updated to verify the new blue token and map-lens artwork. The in-app screenshot renderer timed out on the textured page, so Chrome provided the final visual evidence without changing the application.
+- **Evidence:** `app/templates/index.html`, `app/static/app.css`, `tests/test_app_routes.py`, `docs/exam-journal.md`, the supplied Sofianer reference URL, and the verification commands above.

@@ -32,7 +32,7 @@ def test_create_subscription_rejects_invalid_district() -> None:
     )
 
 
-def test_root_endpoint_renders_property_alert_dashboard() -> None:
+def test_root_endpoint_renders_editorial_property_alert_page() -> None:
     with TestClient(app) as client:
         response = client.get("/")
         stylesheet_response = client.get("/static/app.css")
@@ -45,7 +45,8 @@ def test_root_endpoint_renders_property_alert_dashboard() -> None:
     assert 'autocomplete="email"' in response.text
     assert 'role="status"' in response.text
     assert stylesheet_response.status_code == 200
-    assert "--accent: #0f766e" in stylesheet_response.text
+    assert "--blue: #1597c7" in stylesheet_response.text
+    assert ".map-lens" in stylesheet_response.text
 
 
 def test_root_endpoint_renders_in_live_mode(monkeypatch) -> None:
