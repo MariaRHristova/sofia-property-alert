@@ -144,16 +144,39 @@ async def create_subscription(request: Request) -> JSONResponse:
     )
 
 
-@app.post("/subscriptions/{token}/unsubscribe")
-def unsubscribe_subscription(token: str) -> JSONResponse:
+@app.api_route("/subscriptions/{token}/unsubscribe", methods=["GET", "POST"])
+def unsubscribe_subscription(token: str, request: Request):
     with SessionLocal() as session:
         service = SubscriptionService(session)
-        success = service.deactivate_subscription(token)
+        success = service.delete_subscription(token)
 
     if not success:
+        if request.method == "GET":
+            return HTMLResponse(
+                status_code=404,
+                content=(
+                    "<html><body style='font-family:Arial,sans-serif;padding:24px;'>"
+                    "<h1>Subscription not found</h1>"
+                    "<p>The alert may already have been removed.</p>"
+                    "<a href='/'>Return to the app</a>"
+                    "</body></html>"
+                ),
+            )
         return JSONResponse(
             status_code=404,
             content={"error": "Subscription not found."},
+        )
+
+    if request.method == "GET":
+        return HTMLResponse(
+            status_code=200,
+            content=(
+                "<html><body style='font-family:Arial,sans-serif;padding:24px;'>"
+                "<h1>You are unsubscribed</h1>"
+                "<p>The alert was removed from your saved alerts.</p>"
+                "<a href='/'>Back to the dashboard</a>"
+                "</body></html>"
+            ),
         )
     return JSONResponse(status_code=200, content={"status": "unsubscribed"})
 

@@ -40,7 +40,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **AI-assisted workflow:** Retrieved the linked GitHub Blog template, inspected the current repository and evidence skill, then translated the template's persona, project knowledge, tools, standards, example, and always/ask/never sections to Sofia Property Alert.
 - **AI tool choice:** Codex was used to retrieve and analyze the source article, inspect the workspace, adapt the template, and validate the resulting repository changes.
 - **Key prompts:** "Update the AGENTS.md file based on the blog post using the suggested template on this link: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/"
-- **Validation:** Ran `git diff --check` successfully, reviewed the complete patch, and confirmed that AGENTS.md contains no copied Node/TypeScript commands or unresolved template placeholders.
+- **Validation:** Ran ` .\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 12 passing tests with one upstream Starlette deprecation warning. Ran `git diff --check`; only pre-existing CRLF warnings appeared.
 - **Challenges and learning:** The standard page reader was blocked, so the article and its exact starter template were retrieved through GitHub Blog's public WordPress API.
 - **Evidence:** `AGENTS.md`, `docs/exam-journal.md`, and the linked GitHub Blog article.
 
@@ -277,3 +277,25 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 tests/test_scheduler_service.py -q` and got `2 passed in 0.19s`.
 - **Challenges and learning:** The project-local instruction files under `.codex/` and `.agents/` required protected writes, and the available `.codex/config.toml` did not expose a built-in local cleanup hook. A wrapper script was the safest minimal solution for this repository shape.
 - **Evidence:** `scripts/run_pytest_clean.ps1`, `AGENTS.md`, `README.md`, `.codex/agents/frontend-engineer.toml`, `.agents/skills/fullstack-feature/SKILL.md`, and this journal entry.
+
+### 2026-06-22 - One-click email unsubscribe that deletes saved alerts
+
+- **Outcome:** Added an unsubscribe button to the emailed digest that opens the app and deletes the subscription record and its saved matches, so the alert disappears from the saved alerts list instead of only becoming inactive.
+- **Approach and reasoning:** Kept the existing dashboard and job flows intact, but changed the unsubscribe endpoint to a one-click delete action for both browser and app usage. Built the email button as an absolute link using the app base URL so it works outside the local dashboard.
+- **AI-assisted workflow:** Codex traced the current unsubscribe flow, rewrote the email digest to include a styled unsubscribe button and text fallback link, changed the app endpoint to delete subscriptions on GET/POST, and updated the route tests to verify the saved alert disappears after the email link is followed.
+- **AI tool choice:** Codex was used because the feature crosses email rendering, HTTP routing, persistence cleanup, and automated tests in one repository.
+- **Key prompts:** "I want you to add an unsubscribe button to the email which then unsubscribes the user in the app as well and removes the alert from saved alerts."
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 12 passing tests with one upstream Starlette deprecation warning. Ran `git diff --check`; only pre-existing CRLF warnings appeared.
+- **Challenges and learning:** Email clients do not reliably support POST forms, so the unsubscribe action needed to be a clickable GET link even though the app still accepts POST for the dashboard flow.
+- **Evidence:** `app/email/delivery.py`, `app/main.py`, `tests/test_email_digest.py`, `tests/test_app_routes.py`, `docs/exam-journal.md`
+
+### 2026-06-22 - Full-width modern dashboard sections
+
+- **Outcome:** Reorganized the homepage into clearly separated, full-width Create alert, Scheduler settings, Stored alerts, and Recent job runs sections. Stored alert cards now use the available width, collapse to one column on small screens, and remain inside a bounded scroll region when the collection grows.
+- **Approach and reasoning:** Removed the stale inline theme and the narrow two-column shell, then used the existing teal real-estate palette, restrained borders, section kickers, generous spacing, and responsive CSS rather than adding a UI dependency. All stored alerts are rendered; the list container scrolls after its maximum height instead of silently hiding alerts after the tenth item.
+- **AI-assisted workflow:** Codex inspected the current template and CSS, compared the running page with the supplied screenshot, reshaped the Jinja structure, refined desktop and mobile layouts, and used browser screenshots to correct the remaining single-card width issue.
+- **AI tool choice:** Codex plus the in-app Browser were used because the work required coordinated source inspection, template/CSS editing, and visual verification of the local FastAPI page.
+- **Key prompts:** "The UI does not look modern and minimalistic. The sections are too narrow and the user does not understand that these are different sections."; "I want the schedular settings and the Stored subscriptions and preview matches to be better places. Right now they are too narrow, maybe place them below the create an alert section."
+- **Validation:** Ran `python -m pytest tests/test_app_routes.py -q` with `9 passed`. Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` with `22 passed` and one upstream Starlette deprecation warning. Ran focused Ruff checks for the affected Python tests/routes with `All checks passed!`. Verified the homepage visually at a 1440px desktop width in the in-app Browser and at a 500px responsive width in headless Chrome; section stacking, full-width controls, focus styling, and card spacing rendered correctly.
+- **Challenges and learning:** The in-app Browser session ignored its temporary mobile viewport override, so the responsive check used local headless Chrome at its reliable 500px minimum viewport. The clean Pytest wrapper also revealed that the default-settings test inherited `EMAIL_PREVIEW_DIR`; the test now removes that environment override before asserting defaults. A full-repository Ruff run still reports pre-existing long HTML-string lines in `app/email/delivery.py`.
+- **Evidence:** `app/templates/index.html`, `app/static/app.css`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, browser verification, and the commands above.

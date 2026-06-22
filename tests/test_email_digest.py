@@ -26,7 +26,11 @@ def make_subscription() -> SubscriptionView:
 
 
 def test_build_digest_uses_clear_empty_state_copy() -> None:
-    digest = build_digest(make_subscription(), [])
+    digest = build_digest(
+        make_subscription(),
+        [],
+        unsubscribe_url="https://example.com/subscriptions/token/unsubscribe",
+    )
 
     assert "No available listings in Sofia" in digest.subject
     assert "There are no available listings" in digest.text
@@ -34,6 +38,8 @@ def test_build_digest_uses_clear_empty_state_copy() -> None:
     assert "Subscription" in digest.html
     assert "No matches yet" in digest.html
     assert "Matched listings" in digest.html
+    assert "Unsubscribe" in digest.html
+    assert "https://example.com/subscriptions/token/unsubscribe" in digest.html
 
 
 def test_build_digest_renders_distinct_listing_cards() -> None:
@@ -69,6 +75,7 @@ def test_build_digest_renders_distinct_listing_cards() -> None:
 
 def test_settings_default_smtp_backend(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("EMAIL_PREVIEW_DIR", raising=False)
     settings = Settings(_env_file=None)
 
     assert settings.email_backend == "smtp"
