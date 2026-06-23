@@ -37,7 +37,3 @@ The repository includes a virtual environment already, so you can usually start 
 ```
 
 If you prefer a fresh install, use the project dependencies from `pyproject.toml` and the settings in `.env.example`. The test wrapper runs Pytest against temporary database and email-preview paths and deletes them after the run, so agent verification does not pollute local app data.
-
-## Exam evidence workflow
-
-Development evidence is recorded in `docs/exam-journal.md`. The project-local `update-exam-evidence` skill in `skills/update-exam-evidence/` defines when and how to update the journal without modifying the original assignment document.
