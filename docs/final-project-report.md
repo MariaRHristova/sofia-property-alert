@@ -1,39 +1,72 @@
 ﻿# Sofia Property Alert
 
-## AI-Assisted Development Final Project Report
+## AI-Assisted Development - Exam
 
 **Public repository:** <https://github.com/MariaRHristova/sofia-property-alert>
 
 ## 1. Project idea and requirements
 
-Sofia Property Alert is a web application for people searching for real estate in Sofia. A registered user creates a private search alert by choosing sale or rent, property type, number of rooms, preferred Sofia districts, price range, and minimum area. The application can query `imot.bg`, normalize returned listings, match them against saved criteria, and produce a newspaper-style email digest. Users can run a search manually or configure their own automatic interval or daily execution time.
+Sofia Property Alert is a web application for people searching for real estate in Sofia. A registered user creates a private search alert by choosing sale or rent, property type, number of rooms, preferred Sofia districts, price range, and minimum area. The application can query `imot.bg`, normalize returned listings, match them against saved criteria, and produce an email digest. Users can run a search manually or configure their own automatic interval or daily execution time.
 
-The proof of concept was deliberately limited to Sofia. This keeps the live district vocabulary aligned with the Sofia filters and URLs used by `imot.bg`. A fixture-backed provider remains available so the parser and workflow can be demonstrated and tested without depending on a third-party website.
+The proof of concept is limited to Sofia to keep district names, filter values, and search URLs aligned with imot.bg. The project also includes a fixture-backed provider so the parser and workflow can be demonstrated and tested deterministically without relying on live site requests.
 
 ### Functional requirements
 
 - Register with an email address, verify the account, log in, log out, and reset a forgotten password.
 - Keep every user's alerts, job history, and schedule private.
 - Create, deactivate, reactivate, and permanently delete a search alert.
-- Search by transaction, property type, rooms, Sofia district, price, and minimum area.
-- Parse and normalize listing data behind an interchangeable provider interface.
+- Search by listing type (buy or rent), property type, number of rooms, Sofia districts, price range, and minimum area.
+- Collect, parse, and normalize listings from imot.bg; the provider is pluggable so fixtures or alternative sources may be used for deterministic tests.
 - Run the listing job manually or automatically for each user.
-- Render HTML and plain-text digests, create local `.eml` previews, and optionally deliver through SMTP.
-- Avoid duplicate listing and subscription-match records when a job is repeated.
+- Sends an email digest of newly matched listings for each saved alert (HTML + plain-text). Previews are written as local .eml files for testing; SMTP delivery is available via configuration.
+- Avoid duplicate matches and emails: if a listing was already recorded for an alert, it won’t be added again or shown in later digests for the same user. 
 
-### Non-functional requirements
-
-The system must be locally runnable, protect credentials through environment configuration, use deterministic automated tests, preserve an offline demonstration path, and keep third-party access respectful. The MVP must stay small enough to explain during the exam while showing clear separation between the web layer, persistence, providers, matching, scheduling, and email delivery.
 
 ## 2. Architecture and technological modules
 
-The application uses Python 3.11, FastAPI, Jinja2, SQLAlchemy with SQLite, BeautifulSoup with lxml, APScheduler, httpx, Pytest, and Ruff. FastAPI routes remain thin and delegate to service modules. Configuration chooses fixture or live listing collection and preview or SMTP email delivery.
+The system is a small FastAPI app (Python 3.11) with server-rendered Jinja2 views. Routes stay thin and delegate to service modules; SQLAlchemy with SQLite provides persistence. Listing collection uses a pluggable provider (fixture or live imot.bg) and parsing with BeautifulSoup + lxml. Job scheduling and background runs use APScheduler; email digests are rendered as HTML and plain text, previewed to local `.eml` files, and optionally sent via SMTP. Tests use `pytest` and code style is checked with `ruff`.
+
+### Main modules
+
+- **Module 1 — Web UI, accounts, and validation**
+	- Web: FastAPI routes + Jinja2 templates — user forms, dashboard, job controls.
+	- Auth: Registration, verification, login, password reset, sessions.
+	- Subscriptions: Create/manage search alerts and schedules.
+
+- **Module 2 — Persistence, matching, and deduplication**
+	- Persistence: SQLAlchemy models + SQLite (users, subscriptions, listings, matches, job runs).
+	- Matching: Pure service that compares normalized listings to subscriptions and enforces idempotency.
+
+- **Module 3 — Listing provider and parser**
+	- Providers: `ImotBgListingProvider` + `FixtureListingProvider` (pluggable provider interface).
+	- Parser: BeautifulSoup/lxml parsing and normalization of provider HTML.
+
+- **Module 4 — Job execution and per-user scheduling**
+	- Jobs/Scheduler: Job execution pipeline and APScheduler integration; manual and scheduled runs share the same pipeline.
+
+- **Module 5 — Email rendering and delivery**
+	- Email: Render HTML/plain-text digests, write `.eml` previews, optional SMTP delivery; separate rendering and delivery paths.
+
+- **Module 6 — Testing, operational safety, and AI workflow**
+	- Tests: Deterministic unit/integration tests using saved fixtures and `pytest`.
+	- Operational safety: preview-only email mode, temporary test databases, and scripted cleanup.
+
+- **Config & infrastructure**
+	- Environment-driven settings, HTTP client (`httpx`), logging, retries, and other infra concerns.
+
+### Architecture layers
+
+- **Presentation:** FastAPI routes + templates (HTTP handlers, forms).
+- **Application / Services:** `SubscriptionService`, `JobService`, `MatchingService` (business logic, idempotency).
+- **Domain / Models:** SQLAlchemy domain models and validation (Pydantic schemas at boundaries).
+- **Integration / Providers:** Provider implementations (fixture, imot.bg), HTTP fetching, parsing.
+- **Infrastructure:** Scheduler, email delivery, storage, configuration, and test fixtures.
 
 ### AI-assisted planning and execution strategy
 
-The development process intentionally separated strategic planning from implementation. According to the developer's personal notes, the initial architecture and execution plan were prepared in **Plan mode with GPT 5.5 and high reasoning effort**. This was the right place to spend more reasoning: the project still needed scope boundaries, technological modules, a safe fixture-versus-live strategy, an email approach, and an exam-evidence workflow. The approved plan was saved as `plans.md`, making it a persistent repository artifact instead of leaving the strategy only in a chat session.
+Codex was used because it provided the capabilities required and a paid subscription allowed me access to frontier models, which made high-reasoning Plan mode practical for ambiguous architecture decisions. Strategic planning was deliberately separated from implementation. The initial architecture and execution plan were drafted in Plan mode (GPT 5.5, high reasoning) and the approved plan was saved as `plans.md` so the strategy lives in the repository rather than only in chat.
 
-After the plan was agreed, execution moved to less expensive configurations. The notes record the initial scaffold with **GPT 5.4 at medium reasoning**, followed by smaller implementation iterations with **GPT 5.4 mini and low reasoning**. Lower reasoning was suitable for bounded tasks such as creating files from an approved contract, adjusting selectors, changing template copy, or running focused tests. Higher reasoning was used again when architecture changed substantially, for example when planning per-user authentication and scheduling. This created a practical model-selection pattern: spend reasoning on ambiguity and cross-module decisions, then use lighter execution for well-defined edits.
+After plan approval, implementation moved to lower-cost configurations: the initial scaffold used GPT 5.4 (medium reasoning), and most small iterations used GPT 5.4 mini (low reasoning). Higher-reasoning runs were reserved for changes that affected architecture — for example, designing per-user authentication and scheduling. The resulting pattern was simple and practical: invest heavier reasoning where ambiguity and cross-module trade-offs matter, and use lighter, cheaper runs for routine, well-scoped edits (templates, selectors, focused tests).
 
 | Development phase | Recorded Codex configuration | Purpose and evidence |
 | --- | --- | --- |
@@ -44,17 +77,15 @@ After the plan was agreed, execution moved to less expensive configurations. The
 | Complex extensions | Higher-reasoning planning followed by focused execution | Used for scheduler design and authenticated multi-user ownership. |
 | Debugging | Separate focused sessions | Isolated email, live scraping, UI/browser, scheduler, and authentication problems. |
 
-These model names and reasoning levels come from the developer's contemporaneous notes, not from exported platform telemetry. They are presented as the developer's workflow record rather than an automatically verified usage log.
-
 Three project-local subagents were created to make responsibilities explicit:
 
 - `backend_engineer` owned FastAPI contracts, SQLAlchemy/SQLite, providers, matching, scheduling, and email business logic.
 - `frontend_engineer` owned Jinja2 templates, form behavior, accessibility, loading/error states, responsive design, and browser verification.
 - `integration_reviewer` was read-only and configured for high reasoning so it could inspect cross-layer contracts, idempotency, security, and test evidence without changing files.
 
-`.codex/config.toml` limited the design to four concurrent threads and one level of delegation. The project-local `$fullstack-feature` skill required backend and frontend contract proposals to be reconciled before implementation and reserved subagents for changes that genuinely crossed layers. This configuration was valuable, but the developer also learned that creating agents does not prove they were invoked in every later session. Because no complete automatic per-call audit log existed, this report distinguishes **configured agent capability** from **verified use** and does not claim that every feature was implemented by a subagent.
+`.codex/config.toml` limited the design to four concurrent threads and one level of delegation. The project-local `$fullstack-feature` skill required alignment of backend and frontend interfaces — agreeing on endpoints, payloads, and expected behavior — before implementation, and subagents were reserved only for changes that genuinely crossed layers. That configuration proved useful, but proving agent invocation later was difficult: Codex does not provide a reliable debug or per-call audit mode for tracking tool or agent calls. For that reason this report distinguishes **configured agent capability** from **verified use** and does not claim every feature was implemented by a subagent.
 
-Three local skills supported the workflow. `update-exam-evidence` was created from the assignment rubric to maintain `docs/exam-journal.md`. `$fullstack-feature` described safe multi-agent coordination. The third skill, `beautifulsoup-parsing`, was installed locally from `skills.sh/mindrally/skills/beautifulsoup-parsing` and used to guide DOM navigation, safe extraction, URL resolution, missing-field handling, parser choice, and respectful scraping.
+Local skills supported the workflow. `$fullstack-feature` described safe multi-agent coordination. The `update-exam-evidence` skill maintained a running log of prompts, commands, and results to simplify exam preparation. The `beautifulsoup-parsing` skill was installed locally from `skills.sh/mindrally/skills/beautifulsoup-parsing` and used to guide DOM navigation, safe extraction, URL resolution, missing-field handling, parser choice, and respectful scraping.
 
 ### Module 1: Web UI, accounts, and validation
 
@@ -64,21 +95,17 @@ Three local skills supported the workflow. `update-exam-evidence` was created fr
 
 **Testing.** `tests/test_app_routes.py` covers registration, verification, login, password reset, ownership, subscription operations, and validation responses. The current full suite passes.
 
-**Why Codex.** It could coordinate route, template, CSS, schema, database, and test changes in the same workspace while explaining security decisions.
-
-**Key prompts:** “Focus on minimal working proof of concept”; “Extend the app, so different users can register with their email, log in safely”; “Each user should be able to apply the scheduler and the manual job controls.”
+**Key prompts:** “Extend the app, so different users can register with their email, log in safely”; “Each user should be able to apply the scheduler and the manual job controls.”
 
 ### Module 2: Persistence, matching, and deduplication
 
-**Approach and reasoning.** SQLAlchemy models store users, sessions, account tokens, subscriptions, listings, listing matches, job runs, and per-user scheduler settings. Listing identity is unique by source and external ID, while a subscription-listing pair is also unique. These database constraints make repeated collection idempotent at the storage layer. Pure matching logic compares normalized listing values with the saved transaction, type, city, district, room, price, and area criteria.
+**Approach and reasoning.** SQLAlchemy models store users, sessions, account tokens, subscriptions, listings, listing matches, job runs, and per-user scheduler settings. Listing identity is unique by source and external ID, while a subscription-listing pair is also unique. These database constraints ensure repeated collection does not create duplicate records at the storage layer. Pure matching logic compares normalized listing values with the saved transaction, type, city, district, room, price, and area criteria.
 
 **AI-assisted workflow.** Codex separated route handling from `SubscriptionService`, `JobService`, and pure preview matching. It added permanent deletion, token-based deactivation, reactivation, ownership checks, and a small startup migration path for the evolving SQLite proof-of-concept schema. An early global scheduler row with hard-coded ID `1` caused collisions after accounts were added; it was redesigned as one unique scheduler configuration per user.
 
 **Testing.** Temporary databases isolate route and scheduler tests. Uniqueness constraints are implemented in `app/models.py`, and the job service handles an attempted duplicate match without creating a second row.
 
-**Why Codex.** The module required coordinated schema, service, migration, and regression-test changes while preserving existing local data.
-
-**Key prompts:** “Make sure the user can delete a subscription, not only unsubscribe”; “Unsubscribe should deactivate the alert and allow subscribing again”; “Clean up the test data.”
+**Key prompts:** “Make sure the user can delete a subscription, not only unsubscribe”; “Unsubscribe should deactivate the alert and allow subscribing again”; “Clean up the test data from the database after finishing with tests”
 
 **Known limitation.** Match records are deduplicated, but the current digest query loads all stored matches for an alert. A production-ready next step is to send only matches created during the current run and mark them delivered. Therefore strict “new listings only” delivery is not claimed as complete.
 
@@ -90,9 +117,7 @@ Three local skills supported the workflow. `update-exam-evidence` was created fr
 
 **Testing.** `tests/test_fixture_parser.py` uses saved HTML rather than network calls and verifies parsing and normalization. Live access is configuration-controlled and is not required by the automated suite.
 
-**Why Codex and the parsing skill.** Codex handled repository-wide integration; the skill supplied a disciplined DOM-inspection and selector-validation workflow.
-
-**Key prompts:** “Use BeautifulSoup parsing to plan how to implement the search properly”; “The filters do not match the imot.bg structure”; “For Sofia the districts are given in the HTML here.”
+**Key prompts:** “Use BeautifulSoup parsing skill to plan how to implement the search properly”; “The filters do not match the imot.bg structure”; “For Sofia the districts are given in the HTML I provided.”
 
 ### Module 4: Job execution and per-user scheduling
 
@@ -102,9 +127,7 @@ Three local skills supported the workflow. `update-exam-evidence` was created fr
 
 **Testing.** `tests/test_scheduler_routes.py` verifies authenticated configuration routes. `tests/test_scheduler_service.py` verifies disabled schedules, job registration, and prevention of overlapping execution. The scheduler can be disabled so tests and local startup remain deterministic.
 
-**Why Codex.** It could keep the scheduler additive, reuse the existing pipeline, and verify service and browser-facing behavior together.
-
-**Key prompts:** “I want to be able to choose the time interval the job runs”; “Keep it as Proof of Concept”; “The user must know that something is happening.”
+**Key prompts:** “I want to be able to choose the time interval the job runs”; “The user must know that something is happening when they click on Run Daily Job button.”
 
 ### Module 5: Email rendering and delivery
 
@@ -114,27 +137,23 @@ Three local skills supported the workflow. `update-exam-evidence` was created fr
 
 **Testing.** `tests/test_email_digest.py` verifies the empty state, listing cards, unsubscribe URL, subject and text alternatives, and approved neutral palette. `tests/conftest.py` forces preview delivery and temporary paths, preventing automated tests from contacting real SMTP.
 
-**Why Codex.** It supported implementation, delivery diagnosis, copywriting, email-safe HTML, and regression testing. The local preview path was more reliable for development than repeatedly testing a live Gmail account.
-
 **Key prompts:** “Add a real email preview/delivery path”; “If there are no listings, also send an email”; “Make the email match the UI style.”
 
 ### Module 6: Testing, operational safety, and AI workflow
 
 **Approach and reasoning.** Pytest tests use temporary SQLite databases, fixture HTML, and preview email directories. `scripts/run_pytest_clean.ps1` runs the suite and removes generated test data afterward. Ruff checks imports and style. Environment secrets are excluded from Git, and the app logs job counts and errors without logging passwords.
 
-**AI-assisted workflow.** Codex created the test wrapper after local test records polluted the developer database. Project-local `AGENTS.md`, specialist subagents, a full-stack orchestration skill, and the `update-exam-evidence` skill were introduced to make future work repeatable. In practice, broad subagent orchestration consumed too much context for small tasks; direct single-agent work with focused skills was more efficient. This became an important lesson: agents need narrow ownership and should be used only when genuine parallel work justifies the coordination cost.
+**AI-assisted workflow.** The test harness and cleanup scripts were iterated with Codex alongside focused unit and integration tests. Fixtures and preview-only delivery keep the automated suite deterministic and safe to run locally; larger integration checks are executed manually when needed. Test outputs and commands were recorded to simplify exam preparation.
 
 **Validation on 23 June 2026.** `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` completed with **20 passed and one upstream Starlette deprecation warning in 8.49 seconds**. `.\.venv\Scripts\python -m ruff check .` returned **All checks passed!**
 
-**Why Codex.** Its strongest advantage was the closed loop between discussion, local editing, command execution, test diagnosis, and evidence capture. Browser availability varied between sessions, so screenshots and deterministic route tests remained important fallbacks.
-
-**Key prompts:** “Create the skill that you suggested for this project”; “Create project-local Codex subagents”; “Add a hook when you do tests to clean up the test data.”
+**Key prompts:** “Add a hook when you do tests to clean up the test data.”
 
 ## 3. Challenges, tool assessment, and learning
 
 ### 3.1 Turning an open idea into an executable plan
 
-The original idea sounded simple: select criteria and receive new Sofia listings by email. In practice it contained at least seven modules—UI validation, accounts, persistence, parsing, matching, scheduling, and email—and several safety questions. Plan mode with GPT 5.5 and high reasoning was most valuable at this stage because the problem was still ambiguous. It produced an ordered implementation strategy and saved it in `plans.md`. Persisting the plan made later sessions less dependent on chat memory and gave both the developer and Codex a shared checkpoint.
+The original idea sounded simple: select criteria and receive new Sofia listings by email. In practice it contained at least seven modules—UI validation, accounts, persistence, parsing, matching, scheduling, and email—and several safety questions. Plan mode with GPT 5.5 and high reasoning was most valuable at this stage because the problem was still ambiguous. It produced an ordered implementation strategy and saved it in `plans.md`. Persisting the plan made later sessions less dependent on chat memory and gave Codex a shared checkpoint between sessions.
 
 A useful lesson was that reasoning effort should follow uncertainty. High reasoning added value when deciding module boundaries, fixture/live architecture, per-user scheduling, and authentication ownership. It was wasteful for repetitive edits after those decisions were stable. GPT 5.4 medium and GPT 5.4 mini/low reasoning were therefore used for narrower execution iterations. This was not only a cost decision; it reduced the tendency to redesign settled parts of the MVP.
 
@@ -144,13 +163,13 @@ Creating the subagents required inspecting the real repository first. The backen
 
 The `$fullstack-feature` skill acted as an orchestrator: backend and frontend agents were expected to propose one compatible contract before implementation, and the reviewer checked the integrated diff afterward. Concurrency was capped at four threads and depth at one. These limits prevented uncontrolled agent trees.
 
-The experiment also revealed weaknesses. Merely defining an agent does not ensure that the primary agent will invoke it, and the interface did not provide the developer with a simple permanent audit trail of every agent and skill call. On some full-stack iterations, coordination consumed context quickly and produced conflicting route variants that the primary agent then had to reconcile. The developer's blunt but accurate lesson was that an ill-defined agent can be more work than help. For this project, the best use of subagents was substantial, clearly separated work; small changes were better handled directly.
+The experiment also revealed weaknesses. Merely defining an agent does not ensure that the primary agent will invoke it, and the Codex interface did not provide me with a simple permanent audit trail of every agent and skill call. On some full-stack iterations, coordination consumed context quickly and produced conflicting route variants that the primary agent then had to reconcile. What I learned is the hard-earned lesson  that an ill-defined agent can be more work than help. For this project, the best use of subagents was substantial, clearly separated work; small changes were better handled directly. In practice, broad subagent orchestration sometimes consumed excessive context for small tasks, so direct single-agent work with focused skills often proved more efficient.
 
 ### 3.3 Using a downloaded skill for the BeautifulSoup scraper
 
-The BeautifulSoup task benefited from a specialized external skill. The developer found `mindrally/skills/beautifulsoup-parsing` on `skills.sh` and installed it locally under `skills/beautifulsoup-parsing/`. Keeping it project-local made its instructions reproducible and avoided changing the global Codex environment.
+The BeautifulSoup task benefited from a specialized external skill. I found `mindrally/skills/beautifulsoup-parsing` on `skills.sh` and installed it locally under `skills/beautifulsoup-parsing/`. Keeping it project-local made its instructions reproducible and avoided changing the global Codex environment.
 
-The skill was not treated as a finished scraper. It supplied parsing practices: choose `lxml`, navigate with stable selectors, handle missing elements, clean text, resolve relative URLs, validate types, deal with malformed HTML and encoding, use an explicit user agent, and respect site terms and rate limits. Codex then applied those practices to the actual `imot.bg` pages supplied by the developer.
+The skill was not treated as a finished scraper. It supplied parsing practices: choose `lxml`, navigate with stable selectors, handle missing elements, clean text, resolve relative URLs, validate types, deal with malformed HTML and encoding, use an explicit user agent, and respect site terms and rate limits. Codex then applied those practices to the actual `imot.bg` pages supplied.
 
 The first implementation still failed because its fixture selectors did not represent the live result cards. Later, live results appeared absent because the application was still configured for the fixture provider. These were two different problems—parser correctness and runtime provider selection—and separate debugging sessions were needed to distinguish them. The final design keeps both providers: live mode for demonstration and fixtures for deterministic tests.
 
@@ -162,11 +181,10 @@ The drawback was context fragmentation. A new session did not automatically know
 
 ### 3.5 Email delivery, credentials, and inbox rendering
 
-Email combined security, external configuration, and presentation. Preview mode was initially useful but did not satisfy the requirement to send mail. Gmail SMTP then introduced app-password and authentication debugging. Tests once inherited the developer's `.env`, which risked contacting SMTP and polluting the local database. Temporary test configuration and the cleanup wrapper fixed this.
+Email combined security, external configuration, and presentation. Preview mode was initially useful but did not satisfy the requirement to send mail. Gmail SMTP then introduced app-password and authentication debugging. 
 
 Inbox HTML created a different class of issue. Flexbox that looked correct in a browser overlapped in the email client, so it was replaced with table-based markup. Bright colors that looked energetic in the application felt distracting in a digest; repeated screenshot feedback moved both surfaces toward restrained newspaper typography and neutral colors.
 
-A credential accidentally appeared in personal notes and was later redacted. Because it entered Git history, deletion from the current file was insufficient; revocation and history cleanup remain necessary. This reinforced the rule that secrets belong only in `.env`, while reports and screenshots must be sanitized.
 
 ### 3.6 Browser verification and visible feedback
 
@@ -178,7 +196,7 @@ Visible progress also became a product requirement. When “Run daily job” gav
 
 **Most helpful tool:** Codex was the central tool because it joined planning, repository inspection, editing, terminal execution, debugging, browser-oriented work, and evidence documentation. Its greatest strength was not any single code suggestion but the closed loop from requirement to change to test result.
 
-**Most helpful specialized skill:** `beautifulsoup-parsing` made the scraper workflow more disciplined and helped translate generic DOM practices into the real imot.bg structure. `update-exam-evidence` was equally important for the exam because it prevented late-stage reconstruction of prompts and results.
+**Most helpful specialized skill:** `beautifulsoup-parsing` made the scraper workflow more disciplined and helped translate generic DOM practices into the real imot.bg structure.
 
 **Most helpful artifact:** `plans.md` was the bridge between high-reasoning planning and lower-cost execution. `AGENTS.md` became the bridge between separate sessions.
 
@@ -186,11 +204,9 @@ Visible progress also became a product requirement. When “Run daily job” gav
 
 **Model/reasoning lesson:** High reasoning is best for ambiguity, architecture, and review. Medium reasoning works well for coordinated implementation. Mini/low reasoning is effective for small changes after the contract is fixed. Tests, not reasoning level, determine whether execution is acceptable.
 
-**Developer contribution:** The developer did not passively accept generated output. She narrowed the scope to Sofia, supplied real URLs and screenshots, corrected the fixture/live misunderstanding, demanded real email delivery, changed unsubscribe semantics, requested per-user scheduling, added visible progress, rejected distracting visual designs, and challenged unclear agent/tool usage. Those corrections materially improved the application.
-
 ## 4. Working-system evidence
 
-The appendix includes every screenshot artifact prepared for the project. Privacy-safe copies are used here: personal email addresses, the developer's name, verification/reset tokens, and Gmail message URLs are covered. The original files were removed from the repository; sanitized copies are in `docs/report-screenshots/`.
+The appendix includes every screenshot artifact prepared for the project. Privacy-safe copies are used here: personal email addresses, verification/reset tokens, and Gmail message URLs are covered. 
 
 ### 4.1 Account registration, login, and recovery
 

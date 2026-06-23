@@ -1,0 +1,3 @@
+- Create, deactivate, reactivate, and permanently delete a search alert.
+- Search by transaction, property type, rooms, Sofia district, price, and minimum area.
+- Parse and normalize listing data behind an interchangeable provider interface.

@@ -1,0 +1,14 @@
+Backup created before editing.
+
+---
+
+Current snippet:
+
+- Register with an email address, verify the account, log in, log out, and reset a forgotten password.
+- Keep every user's alerts, job history, and schedule private.
+- Create, deactivate, reactivate, and permanently delete a search alert.
+- Search by transaction, property type, rooms, Sofia district, price, and minimum area.
+- Parse and normalize listing data behind an interchangeable provider interface.
+- Run the listing job manually or automatically for each user.
+- Render HTML and plain-text digests, create local `.eml` previews, and optionally deliver through SMTP.
+- Avoid duplicate listing and subscription-match records when a job is repeated.
