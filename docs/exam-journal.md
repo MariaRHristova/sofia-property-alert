@@ -6,7 +6,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 
 - **Repository:** https://github.com/MariaRHristova/sofia-property-alert
 - **Goal:** Let users define criteria for Bulgaria real estate and receive daily email notifications for newly discovered matching listings.
-- **Final submission:** TODO - Google Drive document URL
+- **Final submission:** https://docs.google.com/document/d/1wdO3ZBTNO-NdeIc1YVJCgY8JDM6CRzeR-nBgWTsrEcA/edit?tab=t.0
 
 ## Module status
 
@@ -431,3 +431,36 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Validation:** Verified that `docs/report-screenshots/` contains the registration, verification, reset, dashboard, sale form, rent form, scheduler, stored-alerts image, and all six rendered digest pages. Visually inspected the privacy masks. Application tests were not rerun because this change affects only documentation and generated evidence images.
 - **Challenges and learning:** The original screenshots contained an email address, personal name, verification/reset tokens, and Gmail message URLs. The final report uses sanitized copies and keeps the originals out of the embedded public appendix. The expanded report intentionally exceeds the normal page guideline.
 - **Evidence:** `docs/final-project-report.md`, `docs/report-screenshots/`, `plans.md`, `.codex/agents/`, `.agents/skills/fullstack-feature/`, `skills/beautifulsoup-parsing/`, and `docs/exam-journal.md`.
+
+### 2026-06-23 - Final report simplified and rewritten in first person
+
+- **Outcome:** Simplified `docs/final-project-report.md` to about 2,090 words, rewrote the narrative consistently from my point of view, and retained the assignment's required modules, AI workflow, prompts, challenges, screenshots, repository link, and future improvements.
+- **Approach and reasoning:** Removed repeated architecture and tool discussion while keeping one concise approach, AI-assisted workflow, validation statement, and key-prompt section for each technological module. Updated matching and deduplication to reflect the completed pending/delivered database workflow.
+- **AI-assisted workflow:** Codex compared the report with the assignment rubric and exam journal, identified the stale “new listings only” limitation and outdated test count, then rewrote the report and expanded browser validation into a concrete explanation of the local URL, desktop and responsive viewports, checked behaviors, fallback to headless Chrome, and issues found visually.
+- **AI tool choice:** Codex was used because the revision required cross-checking narrative claims against repository evidence rather than only proofreading prose.
+- **Key prompt:** “Review the final-project-report.md, make it simple and enough to cover the exam, and make it sound from my point of view. The section about browser validation is not clear enough.”
+- **Validation:** Confirmed that all screenshot links referenced by the report exist. `git diff --check` reported only the expected Windows LF-to-CRLF warning. Application tests were not rerun because this change affects documentation only; the report cites the latest verified full-suite result of `22 passed, 1 warning in 5.91s`.
+- **Challenges and learning:** An additional untracked screenshot could not be privacy-inspected in the current Windows image sandbox, so it was not added to the public report. The report now describes the included images as privacy-safe evidence rather than claiming every folder artifact is included.
+- **Evidence:** `docs/final-project-report.md`, `docs/exam-journal.md`, `docs/report-screenshots/`, and the report-link and diff checks above.
+
+### 2026-06-23 - Redacted signed-in account screenshot added to report
+
+- **Outcome:** Added a privacy-safe signed-in account screenshot to the final report, showing that subscriptions, manual runs, and scheduler settings belong to the authenticated account.
+- **Approach and reasoning:** Covered the complete email address with an opaque black rectangle, saved the result under an explicitly redacted filename, and moved the unredacted source out of the repository to prevent accidental publication.
+- **AI-assisted workflow:** Codex loaded the local screenshot into the conversation after the Windows image sandbox blocked direct inspection, used the image-editing tool to create the redaction, visually checked the result, saved the selected output in the report assets, and added its Markdown reference.
+- **AI tool choice:** The image-editing tool was used because the task required modifying a raster screenshot while preserving the visible UI evidence.
+- **Key prompt:** “Try redacting and adding the untracked screenshot again.”
+- **Validation:** Confirmed visually that the email address is fully covered and that the account heading, ownership explanation, and logout control remain visible. Confirmed that the report references the new redacted asset and that the unredacted source no longer appears in the repository worktree.
+- **Challenges and learning:** Direct `view_image` and file-path image editing were blocked by the Windows split-root sandbox, so the source image had to be loaded as image data before editing.
+- **Evidence:** `docs/report-screenshots/04-signed-in-account-redacted.png`, `docs/final-project-report.md`, and `docs/exam-journal.md`.
+
+### 2026-06-23 - Local final report synchronized from the Google Doc
+
+- **Outcome:** Updated `docs/final-project-report.md` to match the user-edited Google Doc exactly in wording, section order, table contents, future improvements, and screenshot order. The Google Doc itself was not edited.
+- **Approach and reasoning:** Treated the Google Doc as the read-only source of truth, downloaded a temporary DOCX export, read its paragraph, table, and image relationships directly, and rebuilt the Markdown from that structure.
+- **AI-assisted workflow:** Codex attempted read-only access through the in-app browser and standard page reader, then used Google's read-only export endpoint when those paths were unavailable. The DOCX was inspected in three bounded structural sections before the local report was patched.
+- **AI tool choice:** Codex was used because the task required live document retrieval, DOCX structure inspection, local Markdown editing, and exact comparison in one workflow.
+- **Key prompt:** “Do not edit the Google Doc, but rather make the .md file match exactly the doc.”
+- **Validation:** Compared 131 normalized Google Doc text blocks with 131 Markdown text blocks and found zero wording differences. Compared all 13 embedded DOCX images with their local report assets using SHA-256 and found exact matches.
+- **Challenges and learning:** The in-app browser connection was unavailable and the standard page reader returned a 403 response. The read-only Google Docs export endpoint provided the authoritative content without modifying the document.
+- **Evidence:** `docs/final-project-report.md`, `docs/report-screenshots/`, `docs/exam-journal.md`, the verified comparison output, and the Google Drive URL above.
