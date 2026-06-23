@@ -37,3 +37,6 @@ The repository includes a virtual environment already, so you can usually start 
 ```
 
 If you prefer a fresh install, use the project dependencies from `pyproject.toml` and the settings in `.env.example`. The test wrapper runs Pytest against temporary database and email-preview paths and deletes them after the run, so agent verification does not pollute local app data.
+
+## Vercel deployment (Demo) 
+https://final-project-rosy-delta.vercel.app
