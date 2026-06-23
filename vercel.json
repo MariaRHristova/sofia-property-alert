@@ -1,0 +1,13 @@
+{
+  "experimentalServices": {
+    "app": {
+      "entrypoint": "app/main.py",
+      "routePrefix": "/",
+      "includeFiles": [
+        "app/static/**",
+        "app/templates/**",
+        "tests/fixtures/**"
+      ]
+    }
+  }
+}

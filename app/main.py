@@ -13,6 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import ValidationError
 from sqlalchemy import select
+from sqlalchemy.engine import make_url
 
 from app.catalog import CITY_OPTIONS, PROPERTY_TYPES, ROOM_OPTIONS, TRANSACTION_TYPES
 from app.config import get_settings
@@ -59,12 +60,24 @@ scheduler_manager = AppScheduler(
 )
 
 
+def _ensure_sqlite_parent_directory(database_url: str) -> None:
+    if not database_url.startswith('sqlite'):
+        return
+    try:
+        database = make_url(database_url).database
+    except Exception:
+        return
+    if not database:
+        return
+    Path(database).expanduser().parent.mkdir(parents=True, exist_ok=True)
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     from app import models as app_models
 
     _ = app_models
-    Path("var").mkdir(exist_ok=True)
+    _ensure_sqlite_parent_directory(settings.database_url)
     Base.metadata.create_all(bind=engine)
     ensure_schema(engine)
     Base.metadata.create_all(bind=engine)

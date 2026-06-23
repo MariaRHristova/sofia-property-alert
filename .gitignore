@@ -36,3 +36,6 @@ docs/*.txt
 
 # Course assignment source document
 Project-Assignment.docx
+
+.vercel
+.env*
