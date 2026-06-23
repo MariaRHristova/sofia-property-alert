@@ -501,7 +501,7 @@
           const actionButton = form.querySelector("button");
           const isReactivate = form.dataset.url?.includes("/subscribe");
           setBusyState(actionButton, true, isReactivate ? "Searching again..." : "Unsubscribing...");
-          showMessage(isReactivate ? "Reactivating the alert and searching based on your criteria..." : "Unsubscribing and clearing the current matches...", "success");
+          showMessage(isReactivate ? "Reactivating the alert and searching based on your criteria..." : "Deactivating the alert and clearing the current matches...", "success");
           const response = await fetch(form.dataset.url, { method: form.dataset.method || "POST" });
           if (!response.ok) {
             const failedAction = isReactivate ? "subscribe again" : "unsubscribe this alert";
@@ -510,7 +510,7 @@
             return;
           }
           const data = await response.json();
-          const message = isReactivate ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...` : "Subscription unsubscribed. Reloading...";
+          const message = isReactivate ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...` : "Subscription deactivated. Reloading...";
           showMessage(message, "success");
           window.setTimeout(() => window.location.reload(), 500);
         });

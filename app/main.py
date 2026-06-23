@@ -149,7 +149,7 @@ async def create_subscription(request: Request) -> JSONResponse:
 def unsubscribe_subscription(token: str, request: Request):
     with SessionLocal() as session:
         service = SubscriptionService(session)
-        success = service.delete_subscription(token)
+        success = service.deactivate_subscription(token)
 
     if not success:
         if request.method == "GET":
@@ -158,7 +158,7 @@ def unsubscribe_subscription(token: str, request: Request):
                 content=(
                     "<html><body style='font-family:Arial,sans-serif;padding:24px;'>"
                     "<h1>Subscription not found</h1>"
-                    "<p>The alert may already have been removed.</p>"
+                    "<p>The alert may already have been deactivated or removed.</p>"
                     "<a href='/'>Return to the app</a>"
                     "</body></html>"
                 ),
@@ -174,7 +174,7 @@ def unsubscribe_subscription(token: str, request: Request):
             content=(
                 "<html><body style='font-family:Arial,sans-serif;padding:24px;'>"
                 "<h1>You are unsubscribed</h1>"
-                "<p>The alert was removed from your saved alerts.</p>"
+                "<p>The alert was deactivated. You can subscribe again from the dashboard.</p>"
                 "<a href='/'>Back to the dashboard</a>"
                 "</body></html>"
             ),

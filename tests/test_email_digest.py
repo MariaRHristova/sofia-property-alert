@@ -38,9 +38,14 @@ def test_build_digest_uses_clear_empty_state_copy() -> None:
     assert "Criteria: Sofia, sale, apartment" in digest.text
     assert "Sofia Property Alert digest" in digest.html
     assert "Property Finder" in digest.html
+    assert "Today's edition" in digest.html
     assert "Saved search" in digest.html
     assert "No matches yet" in digest.html
     assert "Matched listings" in digest.html
+    assert "background:#ffffff" in digest.html
+    assert "#fafafa" in digest.html
+    assert "#1597c7" not in digest.html
+    assert "#f2b6bd" not in digest.html
     assert "Unsubscribe" in digest.html
     assert "https://example.com/subscriptions/token/unsubscribe" in digest.html
 

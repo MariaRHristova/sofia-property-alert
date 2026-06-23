@@ -1,4 +1,4 @@
-﻿# Bulgaria Property Alert - Exam Journal
+# Bulgaria Property Alert - Exam Journal
 
 This journal contains raw, verified evidence for the AI-Assisted Development exam report. It is intentionally more detailed than the final submission.
 
@@ -333,7 +333,7 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Key prompts:** "I want the email dogest to match the new UI with calm colors and resonating as if the user is getting a newspaper real estate listing."
 - **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py tests\test_app_routes.py` and got 13 passing tests with one upstream Starlette deprecation warning. Ran `git diff --check` successfully.
 - **Challenges and learning:** Email clients vary widely, so the design had to stay legible and compact without depending on advanced CSS features or layout behavior that could break in inboxes.
-- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+- **Evidence:** `app/static/app.css`, `app/email/delivery.py`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
 
 ### 2026-06-23 - Inbox-safe digest layout for the newspaper-style email
 
@@ -344,7 +344,7 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Key prompts:** "The email looks broken"
 - **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.39s`.
 - **Challenges and learning:** Email rendering remains more conservative than web UI rendering, so visually nice CSS still has to be balanced against what common mail clients actually support.
-- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+- **Evidence:** `app/static/app.css`, `app/email/delivery.py`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
 
 ### 2026-06-23 - Unified pill colors in the email digest
 
@@ -355,4 +355,37 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Key prompts:** "I want the small bubles to be the same light color in the email"
 - **Validation:** Ran `\.\venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.36s`.
 - **Challenges and learning:** Even when the visual style is simple, email clients render small UI atoms very differently, so consistency matters more than decorative color variety.
+- **Evidence:** `app/static/app.css`, `app/email/delivery.py`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Neutral newsprint palette and tighter classifieds rows
+
+- **Outcome:** Added a subtle "Today's edition" dateline, tightened each listing row, and replaced the yellow-cream paper colors in both the web UI and HTML digest with neutral newsprint white and true-white content surfaces.
+- **Approach and reasoning:** Preserved the editorial real-estate newspaper layout while separating the paper effect from yellow tint. Neutral `#f7f7f5` now provides the aged-paper texture, with `#ffffff` cards and controls for clarity.
+- **AI-assisted workflow:** Codex refined the digest layout, then incorporated the developer's palette correction across the shared UI stylesheet and inline email-safe HTML colors. Regression assertions now prevent the rejected cream color from returning.
+- **AI tool choice:** Codex was used because the correction spanned CSS, email-safe inline HTML, tests, and repository verification.
+- **Key prompts:** "ok, do that"; "Make the background white as an old newspaper, not this yellowish nightmare in both the UI and the HTML email template."
+- **Validation:** Confirmed no legacy warm-paper colors remain. Ran `.\scripts\run_pytest_clean.ps1 tests\test_app_routes.py tests\test_email_digest.py -q` with `13 passed`, then `.\scripts\run_pytest_clean.ps1 -q` with `23 passed, 1 warning`.
+- **Challenges and learning:** The first editorial palette read as unpleasantly yellow. The developer's correction clarified that the newspaper character should come from typography, borders, and texture rather than cream-colored surfaces.
+- **Evidence:** `app/static/app.css`, `app/email/delivery.py`, `tests/test_app_routes.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Black-and-white editorial email redesign
+
+- **Outcome:** Reworked the digest into a more restrained editorial style with black-and-white foundations, subtle teal accents, and no cartoonish blue or pink surfaces.
+- **Approach and reasoning:** Kept the newspaper-like structure but removed the playful color blocks that made the earlier version feel more like a poster than a print digest. The new version stays aligned to the UI while looking calmer and more premium.
+- **AI-assisted workflow:** Codex reviewed the current digest, replaced the loud color blocks with neutral surfaces, adjusted the badge and header treatment, and updated the digest test expectations to match the new palette.
+- **AI tool choice:** Codex was used because the task required coordinated HTML, copy, and regression-test changes in one local workspace.
+- **Key prompts:** "Change the current email template code to remove the cartoonish elements. Redesign it with a modern, sleek "editorial" aesthetic inspired by classic print newspaper real estate listings and like the New Yorker. I want it still to match the UI but with minimalist black-and-white tones, with the known accents."
+- **Validation:** Ran the focused email digest tests and got 3 passing tests.
+- **Challenges and learning:** The main challenge was preserving clarity and hierarchy while stripping the palette down to almost monochrome, since the email still needs to feel branded rather than generic.
+- **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Lightened the email canvas away from yellow
+
+- **Outcome:** Shifted the digest background and surrounding surfaces to a cleaner neutral white/gray palette so the email reads lighter and stops feeling yellowish.
+- **Approach and reasoning:** Preserved the black-and-white editorial direction but removed the warmer cream tones from the outer canvas and summary surfaces. The result stays calm and newspaper-like while feeling fresher in the inbox.
+- **AI-assisted workflow:** Codex reviewed the current digest palette, replaced the remaining warm backgrounds with neutral whites, and updated the email digest assertions to match the new surfaces.
+- **AI tool choice:** Codex was used because this was a visual refinement that required code inspection and immediate regression testing.
+- **Key prompts:** "Ok, I want the background of the template to be lighter and not yellowish"
+- **Validation:** Ran `\.\venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.36s`.
+- **Challenges and learning:** Neutral email backgrounds are subtle, but even a small cream tint can dominate the inbox impression when the rest of the design is minimal.
 - **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`

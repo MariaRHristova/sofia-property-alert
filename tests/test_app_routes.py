@@ -68,6 +68,9 @@ def test_root_endpoint_renders_editorial_property_alert_page() -> None:
     assert 'role="status"' in response.text
     assert stylesheet_response.status_code == 200
     assert "--blue: #1597c7" in stylesheet_response.text
+    assert "--paper: #f7f7f5" in stylesheet_response.text
+    assert "--paper-bright: #ffffff" in stylesheet_response.text
+    assert "#fffaf0" not in stylesheet_response.text
     assert ".map-lens" in stylesheet_response.text
 
 
@@ -105,7 +108,7 @@ def test_create_subscription_returns_preview_count() -> None:
     assert "Delete permanently" in page_response.text
 
 
-def test_email_unsubscribe_removes_saved_alert(monkeypatch) -> None:
+def test_unsubscribe_deactivates_alert_and_keeps_resubscribe_path(monkeypatch) -> None:
     payload = {
         "email": "delete@example.com",
         "transaction_type": "sale",
@@ -147,9 +150,10 @@ def test_email_unsubscribe_removes_saved_alert(monkeypatch) -> None:
     assert match_count == 1
     assert unsubscribe_response.status_code == 200
     assert "You are unsubscribed" in unsubscribe_response.text
-    assert payload["email"] not in page_response.text
+    assert payload["email"] in page_response.text
+    assert "Subscribe again" in page_response.text
     assert remaining_matches == 0
-    assert remaining_subscriptions == 0
+    assert remaining_subscriptions == 1
 
 
 def test_job_run_records_job_summary(monkeypatch) -> None:

@@ -97,7 +97,7 @@ def _build_html(
         else f"We found {match_count} matching listings for your alert."
     )
     status_label = "No matches yet" if not has_matches else f"{match_count} matches found"
-    status_bg = "#fffaf0"
+    status_bg = "#ffffff"
     status_fg = "#181717"
     listing_section = _build_listing_rows(matches)
     unsubscribe_cta = ""
@@ -105,33 +105,37 @@ def _build_html(
         unsubscribe_cta = (
             "<div style='margin-top:18px;padding-top:18px;border-top:2px solid #181717;'>"
             "<div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:10px;'>Manage alert</div>"
-            f"<a href='{escape(unsubscribe_url)}' style='display:inline-block;background:#181717;color:#fffaf0;text-decoration:none;border:2px solid #181717;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:700;'>Unsubscribe</a>"
+            f"<a href='{escape(unsubscribe_url)}' style='display:inline-block;background:#181717;color:#f7f7f5;text-decoration:none;border:2px solid #181717;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:700;'>Unsubscribe</a>"
             "<p style='margin:10px 0 0;color:#5f5a55;font-size:12px;line-height:1.6;'>This will remove the alert from your saved searches in the Sofia dashboard.</p>"
             "</div>"
         )
 
     return f"""<html>
-  <body style='margin:0;background:#fffaf0;padding:24px 0;font-family:Arial,Helvetica,sans-serif;color:#181717;'>
+  <body style='margin:0;background:#fafafa;padding:24px 0;font-family:Arial,Helvetica,sans-serif;color:#181717;'>
     <div style='max-width:760px;margin:0 auto;padding:0 16px;'>
-      <div style='border:2px solid #181717;border-radius:26px;overflow:hidden;background:#1597c7;box-shadow:8px 8px 0 #f2b6bd;'>
-        <div style='display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 24px 10px;border-bottom:2px solid #181717;background:#fffaf0;color:#181717;'>
+      <div style='border:2px solid #181717;border-radius:26px;overflow:hidden;background:#ffffff;box-shadow:6px 6px 0 rgba(15,23,42,0.05);'>
+        <div style='display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:14px 24px 10px;border-bottom:2px solid #181717;background:#ffffff;color:#181717;'>
           <span style='padding-top:2px;font-family:Georgia,Times New Roman,serif;font-size:18px;'>The</span>
           <strong style='font-family:Georgia,Times New Roman,serif;font-size:44px;font-weight:400;line-height:.9;letter-spacing:-.07em;text-align:center;text-transform:uppercase;'>Property Finder</strong>
           <small style='padding-top:4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;'>Sofia edition</small>
         </div>
-        <div style='padding:28px 24px 26px;'>
-          <div style='display:inline-block;margin-bottom:14px;padding:7px 11px;border:1.5px solid #181717;border-radius:999px;background:#fffaf0;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;'>Sofia Property Alert digest</div>
-          <h1 style='margin:0 0 12px;font-family:Georgia,Times New Roman,serif;font-size:34px;font-weight:400;line-height:1;color:#181717;'>Look closer. Your next place is already on the map.</h1>
+        <div style='padding:26px 24px 22px;'>
+          <div style='display:inline-block;margin-bottom:14px;padding:7px 11px;border:1.5px solid #181717;border-radius:999px;background:#ffffff;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#0f766e;'>Sofia Property Alert digest</div>
+          <h1 style='margin:0 0 12px;font-family:Georgia,Times New Roman,serif;font-size:32px;font-weight:400;line-height:1.02;color:#181717;max-width:18ch;'>Look closer. Your next place is already on the map.</h1>
+          <div style='display:flex;align-items:center;gap:10px;margin:0 0 12px;color:#0f766e;font-size:11px;letter-spacing:.14em;text-transform:uppercase;'>
+            <span style='white-space:nowrap;'>Today's edition</span>
+            <span style='flex:1;height:1px;background:#0f766e;opacity:.32;'></span>
+          </div>
           <p style='margin:0;max-width:58ch;font-size:15px;line-height:1.7;color:#181717;'>Hello {escape(subscription.email)}, {escape(hero_copy)}</p>
         </div>
       </div>
 
-      <div style='margin-top:18px;border:2px solid #181717;border-radius:26px;background:#fffef8;padding:22px;box-shadow:8px 8px 0 #ccebf3;'>
+      <div style='margin-top:18px;border:2px solid #181717;border-radius:26px;background:#ffffff;padding:22px;box-shadow:6px 6px 0 rgba(15,23,42,0.05);'>
         <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;'>
           <tr>
             <td style='vertical-align:top;padding-right:12px;'>
-              <div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Saved search</div>
-              <div style='font-family:Georgia,Times New Roman,serif;font-size:30px;line-height:1;color:#181717;'>{escape(subscription.city)} &middot; {escape(subscription.property_type.title())}</div>
+              <div style='font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#0f766e;margin-bottom:4px;'>Saved search</div>
+              <div style='font-family:Georgia,Times New Roman,serif;font-size:30px;line-height:1;color:#181717;max-width:18ch;'>{escape(subscription.city)} &middot; {escape(subscription.property_type.title())}</div>
               <div style='margin-top:8px;color:#5f5a55;line-height:1.6;'>{escape(subscription.transaction_type.title())} alert for {escape(subscription.email)}</div>
             </td>
             <td style='vertical-align:top;text-align:right;'>
@@ -140,14 +144,14 @@ def _build_html(
           </tr>
         </table>
 
-        <div style='margin-top:18px;'>
+        <div style='margin-top:18px;display:flex;flex-wrap:wrap;gap:10px;'>
           {_build_subscription_badges(subscription)}
         </div>
         {unsubscribe_cta}
       </div>
 
       <div style='margin-top:18px;'>
-        <div style='margin:0 0 10px 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#5f5a55;'>Matched listings</div>
+        <div style='margin:0 0 10px 4px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#0f766e;'>Matched listings</div>
         {listing_section}
       </div>
     </div>
@@ -182,7 +186,7 @@ def _build_subscription_badges(subscription: SubscriptionView) -> str:
 def _build_listing_rows(matches: list[dict[str, object]]) -> str:
     if not matches:
         return (
-            "<div style='border:2px dashed #181717;border-radius:16px;background:#fffef8;padding:20px 22px;color:#5f5a55;font-family:Georgia,Times New Roman,serif;line-height:1.6;font-size:15px;'>"
+            "<div style='border:2px dashed #181717;border-radius:16px;background:#ffffff;padding:18px 20px;color:#5f5a55;font-family:Georgia,Times New Roman,serif;line-height:1.6;font-size:15px;'>"
             "No listings matched this subscription today. We will keep monitoring Sofia and send the next digest when a fit appears."
             "</div>"
         )
@@ -199,16 +203,16 @@ def _build_listing_rows(matches: list[dict[str, object]]) -> str:
         rows.append(
             f"""<tr>
   <td style='padding:0 0 10px;'>
-    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;border:2px solid #181717;border-radius:16px;overflow:hidden;background:#fffef8;'>
+    <table role='presentation' width='100%' cellpadding='0' cellspacing='0' style='border-collapse:separate;border-spacing:0;border:2px solid #181717;border-radius:16px;overflow:hidden;background:#ffffff;'>
       <tr>
-        <td style='padding:14px 14px 12px;vertical-align:top;'>
-          <div style='font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#5f5a55;margin-bottom:4px;'>Listing {index}</div>
-          <div style='font-size:16px;font-weight:700;line-height:1.3;color:#181717;margin-bottom:4px;'><a href='{url}' style='color:#181717;text-decoration:underline;text-underline-offset:4px;'>{title}</a></div>
-          <div style='font-size:13px;line-height:1.45;color:#5f5a55;'>{city}{district_text}</div>
+        <td style='padding:11px 12px 9px;vertical-align:top;'>
+          <div style='font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:#0f766e;margin-bottom:3px;'>Listing {index}</div>
+          <div style='font-size:15px;font-weight:700;line-height:1.25;color:#181717;margin-bottom:3px;max-width:24ch;'><a href='{url}' style='color:#181717;text-decoration:underline;text-underline-offset:4px;'>{title}</a></div>
+          <div style='font-size:12px;line-height:1.35;color:#5f5a55;'>{city}{district_text}</div>
         </td>
-        <td style='padding:14px 14px 12px;vertical-align:top;text-align:right;white-space:nowrap;'>
-          <div style='display:inline-block;background:#f2b6bd;color:#181717;border:1.5px solid #181717;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:700;margin-bottom:6px;'>EUR {price}</div>
-          <div style='display:block;color:#5f5a55;font-size:12px;'>{area} sq.m</div>
+        <td style='padding:11px 12px 9px;vertical-align:top;text-align:right;white-space:nowrap;'>
+          <div style='display:inline-block;background:#ffffff;color:#181717;border:1.5px solid #181717;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:700;margin-bottom:4px;'>EUR {price}</div>
+          <div style='display:block;color:#5f5a55;font-size:11px;'>{area} sq.m</div>
         </td>
       </tr>
     </table>
@@ -224,9 +228,9 @@ def _build_listing_rows(matches: list[dict[str, object]]) -> str:
 
 def _badge(label: str, tone: str) -> str:
     styles = {
-        "primary": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
-        "neutral": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
-        "accent": "background:#fffaf0;color:#181717;border:1.5px solid #181717;",
+        "primary": "background:#ffffff;color:#181717;border:1.5px solid #181717;",
+        "neutral": "background:#ffffff;color:#181717;border:1.5px solid #181717;",
+        "accent": "background:#ffffff;color:#181717;border:1.5px solid #181717;",
     }
     return (
         f"<span style='display:inline-flex;align-items:center;border-radius:999px;"
