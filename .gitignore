@@ -32,6 +32,7 @@ build/
 dist/
 htmlcov/
 .coverage
+docs/*.txt
 
 # Course assignment source document
 Project-Assignment.docx
