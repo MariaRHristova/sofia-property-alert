@@ -1,4 +1,4 @@
-# Bulgaria Property Alert - Exam Journal
+﻿# Bulgaria Property Alert - Exam Journal
 
 This journal contains raw, verified evidence for the AI-Assisted Development exam report. It is intentionally more detailed than the final submission.
 
@@ -151,19 +151,19 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 
 ## Working-system evidence checklist
 
-- [ ] Screenshot 1: user-facing workflow
-- [ ] Screenshot 2: email, tests, API result, or job logs
+- [x] Screenshot 1: user-facing workflow (`docs/register_login_page.PNG`)
+- [x] Screenshot 2: scheduler controls (`docs/scheduler.PNG`)
 - [x] Public GitHub repository linked
-- [x] No secrets or personal data visible
+- [ ] No secrets or personal data visible - a Gmail credential was found in tracked personal notes and must be revoked and removed from Git history
 
 ## Final report checklist
 
-- [ ] Project idea and requirements fit within one page
-- [ ] Each module description is no longer than half a page
-- [ ] Approach, workflow, tests, tool choice, and prompts are covered
-- [ ] Biggest challenges and AI-tool comparison are included
-- [ ] Future improvements are included
-- [ ] At least two working-system screenshots are included
+- [x] Project idea and requirements fit within one page
+- [x] Each module description is no longer than half a page
+- [x] Approach, workflow, tests, tool choice, and prompts are covered
+- [x] Biggest challenges and AI-tool comparison are included
+- [x] Future improvements are included
+- [x] At least two working-system screenshots are included
 - [ ] Google Drive sharing is set to anyone with the link can view
 - [ ] Total length is three to six pages
 
@@ -303,7 +303,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 ### 2026-06-22 - Sofianer-inspired editorial property experience
 
 - **Outcome:** Replaced the conventional dashboard look with an original editorial property-journal design: an illustrated map-lens cover, oversized serif typography, Sofia-blue and dusty-pink color fields, numbered story sections, tactile borders, and responsive magazine-style property cards.
-- **Approach and reasoning:** Analyzed the user-supplied Sofianer cover for its visual language—bold masthead, cream paper, black ink outlines, blue/pink contrast, map imagery, and print texture—then recreated those principles with original HTML/CSS artwork. The external cover was downloaded only to a temporary local path for analysis and was not shipped in the application.
+- **Approach and reasoning:** Analyzed the user-supplied Sofianer cover for its visual languageвЂ”bold masthead, cream paper, black ink outlines, blue/pink contrast, map imagery, and print textureвЂ”then recreated those principles with original HTML/CSS artwork. The external cover was downloaded only to a temporary local path for analysis and was not shipped in the application.
 - **AI-assisted workflow:** Codex opened and visually inspected the exact reference image, downloaded it to the temporary workspace, translated its design principles into a new hero illustration and page system, verified desktop and mobile screenshots, corrected duplicated live-listing copy, and updated the route test for the new design tokens.
 - **AI tool choice:** Codex and the in-app Browser were used for source inspection, visual analysis, implementation, and live-app verification. Local headless Chrome was used when the textured CSS composition exceeded the in-app screenshot renderer timeout.
 - **Key prompts:** "Ok, I want to to go to this link: https://www.sofianer.com/bg/covers downlaod the image, analyze it and make the web app inspired by the image. I want the design to look modern and sleek. The site not look like a dahboard but to be artsy."; "https://www.sofianer.com/sites/default/files/covers/zdravolina2024.png"
@@ -400,4 +400,14 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 tests/test_app_routes.py tests/test_scheduler_routes.py tests/test_scheduler_service.py tests/test_email_digest.py -q` and got `14 passed, 1 warning in 4.35s` after the fixes. Then ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` and got `20 passed, 1 warning in 5.63s`. Ran `.\\.venv\\Scripts\\python -m ruff check .` and got `All checks passed!`. The remaining warning is the existing upstream `StarletteDeprecationWarning` from FastAPI's installed test client dependency.
 - **Challenges and learning:** The Windows sandbox blocked the normal patch utility for this workspace, so implementation had to be finished through carefully scoped local file rewrites. TestClient form posts were kept dependency-free by parsing URL-encoded request bodies directly instead of adding `python-multipart`. The previous scheduler table also hard-coded `id = 1`, which caused a per-user insert collision and had to be removed before per-user schedules could work.
 - **Evidence:** `app/models.py`, `app/migrations.py`, `app/services/auth.py`, `app/services/scheduler.py`, `app/services/jobs.py`, `app/services/subscriptions.py`, `app/email/delivery.py`, `app/main.py`, `app/templates/index.html`, `app/templates/reset_password.html`, `app/static/app.css`, `tests/test_app_routes.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py`, `tests/test_email_digest.py`, `plans.md`, and the verified command outputs above.
+### 2026-06-23 - Final report assembled from verified evidence
+
+- **Outcome:** Prepared the final exam report in `docs/final-project-report.md` using the verified journal, implementation, current test output, personal development notes, and safe working-system screenshots.
+- **Approach and reasoning:** Condensed the strongest evidence into six technological modules, kept each module below approximately half a page, and selected registration and scheduler screenshots that do not display the user's email address or an account token. Kept the report candid about the remaining new-only digest limitation.
+- **AI-assisted workflow:** Codex followed the project-local `update-exam-evidence` skill, mapped journal entries to the assignment rubric, inspected current implementation and screenshots, redacted an exposed credential from the current notes file, and produced a Google-Docs-ready Markdown report.
+- **AI tool choice:** Codex was used because it could correlate conversation history, repository evidence, screenshots, source code, and fresh verification results without inventing missing evidence.
+- **Key prompts:** “Prepare the final document using /skills $update-exam-evidence”; “I have already done some screenshots in the docs folder”; “I also have my personal notes in final_project_notex.txt.”
+- **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` and got `20 passed, 1 warning in 8.49s`. Ran `.\.venv\Scripts\python -m ruff check .` and got `All checks passed!`. Visually inspected the selected screenshots.
+- **Challenges and learning:** The notes contained a Gmail credential and several screenshots exposed a personal email address or verification token. Those screenshots were excluded from the report, the current note was redacted, and credential rotation plus Git-history cleanup remain mandatory. The report also flags that current digest delivery reloads all stored matches rather than only matches created in the latest run.
+- **Evidence:** `docs/final-project-report.md`, `docs/register_login_page.PNG`, `docs/scheduler.PNG`, `docs/final_project_notes.txt`, `docs/exam-journal.md`, and the command outputs above.
 
