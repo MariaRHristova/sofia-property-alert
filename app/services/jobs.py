@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.config import Settings
@@ -27,6 +27,12 @@ class JobResult:
     email_backend: str
     preview_paths: list[str]
     email_errors: list[str]
+
+
+@dataclass(slots=True)
+class PendingMatchBatch:
+    match_ids: list[int]
+    listings: list[dict[str, object]]
 
 
 class JobService:
@@ -75,12 +81,17 @@ class JobService:
                     matches_created += 1
 
         for subscription in subscriptions:
-            matched_listings = self._load_subscription_matches(subscription.id)
-            delivery_result = email_service.deliver(subscription, matched_listings)
+            pending_matches = self._load_subscription_matches(subscription.id)
+            delivery_result = email_service.deliver(
+                subscription,
+                pending_matches.listings,
+            )
             preview_paths.extend(self._record_delivery(delivery_result))
             if delivery_result.error and delivery_result.error not in email_errors:
                 email_errors.append(delivery_result.error)
             emails_sent += int(delivery_result.sent)
+            if delivery_result.sent and pending_matches.match_ids:
+                self._mark_matches_delivered(pending_matches.match_ids)
 
         job_run.status = "finished_with_errors" if email_errors else "finished"
         job_run.listings_seen = len(listings)
@@ -170,27 +181,45 @@ class JobService:
     def _load_subscription_matches(
         self,
         subscription_id: int,
-    ) -> list[dict[str, object]]:
+    ) -> PendingMatchBatch:
         statement = (
-            select(Listing)
-            .join(ListingMatch, ListingMatch.listing_id == Listing.id)
-            .where(ListingMatch.subscription_id == subscription_id)
+            select(ListingMatch.id, Listing)
+            .join(Listing, ListingMatch.listing_id == Listing.id)
+            .where(
+                ListingMatch.subscription_id == subscription_id,
+                ListingMatch.state == "pending",
+                ListingMatch.delivered_at.is_(None),
+            )
             .order_by(
                 Listing.published_at.desc().nullslast(),
                 Listing.first_seen_at.desc(),
             )
         )
-        return [
-            {
-                "title": listing.title,
-                "url": listing.url,
-                "city": listing.city,
-                "district": listing.district,
-                "price_eur": listing.price_eur,
-                "area_sqm": listing.area_sqm,
-            }
-            for listing in self.session.scalars(statement)
-        ]
+        rows = self.session.execute(statement).all()
+        return PendingMatchBatch(
+            match_ids=[match_id for match_id, _ in rows],
+            listings=[
+                {
+                    "title": listing.title,
+                    "url": listing.url,
+                    "city": listing.city,
+                    "district": listing.district,
+                    "price_eur": listing.price_eur,
+                    "area_sqm": listing.area_sqm,
+                }
+                for _, listing in rows
+            ],
+        )
+
+    def _mark_matches_delivered(self, match_ids: list[int]) -> None:
+        self.session.execute(
+            update(ListingMatch)
+            .where(ListingMatch.id.in_(match_ids))
+            .values(
+                state="delivered",
+                delivered_at=datetime.now(timezone.utc),
+            )
+        )
 
     def _record_delivery(self, delivery_result: EmailDeliveryResult) -> list[str]:
         if delivery_result.output_path:

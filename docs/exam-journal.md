@@ -1,4 +1,4 @@
-﻿# Bulgaria Property Alert - Exam Journal
+# Bulgaria Property Alert - Exam Journal
 
 This journal contains raw, verified evidence for the AI-Assisted Development exam report. It is intentionally more detailed than the final submission.
 
@@ -15,7 +15,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 | UI and validation | Complete | `app/main.py`, `app/templates/index.html`, `app/static/app.css`, `app/schemas.py`, `tests/test_app_routes.py` |
 | Database layer | Complete | `app/models.py`, `app/services/auth.py`, `app/services/subscriptions.py`, `app/services/scheduler.py`, `tests/test_app_routes.py` |
 | Listing provider and parsing | Complete | `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `tests/test_fixture_parser.py` |
-| Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
+| Matching and deduplication | Complete | `app/services/jobs.py`, `tests/test_job_service.py`, `app/services/preview.py` |
 | Scheduler | Complete | `app/services/scheduler.py`, `app/main.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py` |
 | Email delivery | Complete | `app/email/delivery.py`, `app/services/auth.py`, `app/services/jobs.py`, `tests/test_email_digest.py`, `tests/test_app_routes.py` |
 | Testing and observability | Complete | `tests/conftest.py`, `tests/test_app_routes.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py`, `tests/test_email_digest.py` |
@@ -144,6 +144,17 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 - **Validation:** `TestClient(app).get('/')` returned `status 200` after the fix. The focused route suite passed with `9 passed`, the full suite passed with `17 passed`, and `python -m ruff check app tests` reported `All checks passed!`.
 - **Challenges and learning:** A direct live fetch from the homepage was too expensive for normal rendering, especially with active subscriptions in the local database. Keeping live search in the explicit subscription/job flows while making the homepage read-only solved the responsiveness problem without giving up the live provider.
 - **Evidence:** `app/main.py`, `app/services/listings.py`, `tests/test_app_routes.py`, and the verified command outputs above.
+
+### 2026-06-23 - Pending-match delivery state now prevents repeat emails
+
+- **Outcome:** Updated the daily job so each subscription only emails matches that are still pending in the database. Successfully delivered matches are now marked `delivered` with a timestamp, while failed deliveries stay pending for retry.
+- **Approach and reasoning:** Treated `listing_matches` as the source of truth instead of recomputing history from all stored rows. The job now loads only undelivered matches for each subscription, builds the digest from that batch, and updates the same rows after a successful SMTP send. This keeps the preview path safe while making real delivery idempotent across repeated job runs.
+- **AI-assisted workflow:** After the question about handling this in the database layer, Codex implemented the pending-only query and delivery-state update in `app/services/jobs.py`, then added regression tests covering repeat job runs and a delivery-failure retry path.
+- **AI tool choice:** Codex was used because the fix touched the persistence layer, job orchestration, and automated tests in one local workspace.
+- **Key prompts:** "Can't this be handled by the database layer send only those listings not send in previous runs?"; "Ok, implement the plan"
+- **Validation:** Ran `.\.venv\Scripts\python -m pytest tests\test_job_service.py -q` with `2 passed in 0.47s`. Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` with `22 passed, 1 warning in 5.91s`. Ran `.\.venv\Scripts\python -m ruff check app\services\jobs.py tests\test_job_service.py` with `All checks passed!`.
+- **Challenges and learning:** Preview mode still intentionally leaves matches pending because it does not represent a real SMTP send, so the implementation had to distinguish safe local previewing from actual delivered-state persistence.
+- **Evidence:** `app/services/jobs.py`, `tests/test_job_service.py`, `docs/exam-journal.md`
 
 ## Challenges and tool comparison notes
 
@@ -303,7 +314,7 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 ### 2026-06-22 - Sofianer-inspired editorial property experience
 
 - **Outcome:** Replaced the conventional dashboard look with an original editorial property-journal design: an illustrated map-lens cover, oversized serif typography, Sofia-blue and dusty-pink color fields, numbered story sections, tactile borders, and responsive magazine-style property cards.
-- **Approach and reasoning:** Analyzed the user-supplied Sofianer cover for its visual languageвЂ”bold masthead, cream paper, black ink outlines, blue/pink contrast, map imagery, and print textureвЂ”then recreated those principles with original HTML/CSS artwork. The external cover was downloaded only to a temporary local path for analysis and was not shipped in the application.
+- **Approach and reasoning:** Analyzed the user-supplied Sofianer cover for its visual languageРІР‚вЂќbold masthead, cream paper, black ink outlines, blue/pink contrast, map imagery, and print textureРІР‚вЂќthen recreated those principles with original HTML/CSS artwork. The external cover was downloaded only to a temporary local path for analysis and was not shipped in the application.
 - **AI-assisted workflow:** Codex opened and visually inspected the exact reference image, downloaded it to the temporary workspace, translated its design principles into a new hero illustration and page system, verified desktop and mobile screenshots, corrected duplicated live-listing copy, and updated the route test for the new design tokens.
 - **AI tool choice:** Codex and the in-app Browser were used for source inspection, visual analysis, implementation, and live-app verification. Local headless Chrome was used when the textured CSS composition exceeded the in-app screenshot renderer timeout.
 - **Key prompts:** "Ok, I want to to go to this link: https://www.sofianer.com/bg/covers downlaod the image, analyze it and make the web app inspired by the image. I want the design to look modern and sleek. The site not look like a dahboard but to be artsy."; "https://www.sofianer.com/sites/default/files/covers/zdravolina2024.png"
@@ -406,7 +417,7 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Approach and reasoning:** Condensed the strongest evidence into six technological modules, kept each module below approximately half a page, and selected registration and scheduler screenshots that do not display the user's email address or an account token. Kept the report candid about the remaining new-only digest limitation.
 - **AI-assisted workflow:** Codex followed the project-local `update-exam-evidence` skill, mapped journal entries to the assignment rubric, inspected current implementation and screenshots, redacted an exposed credential from the current notes file, and produced a Google-Docs-ready Markdown report.
 - **AI tool choice:** Codex was used because it could correlate conversation history, repository evidence, screenshots, source code, and fresh verification results without inventing missing evidence.
-- **Key prompts:** “Prepare the final document using /skills $update-exam-evidence”; “I have already done some screenshots in the docs folder”; “I also have my personal notes in final_project_notex.txt.”
+- **Key prompts:** вЂњPrepare the final document using /skills $update-exam-evidenceвЂќ; вЂњI have already done some screenshots in the docs folderвЂќ; вЂњI also have my personal notes in final_project_notex.txt.вЂќ
 - **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` and got `20 passed, 1 warning in 8.49s`. Ran `.\.venv\Scripts\python -m ruff check .` and got `All checks passed!`. Visually inspected the selected screenshots.
 - **Challenges and learning:** The notes contained a Gmail credential and several screenshots exposed a personal email address or verification token. Those screenshots were excluded from the report, the current note was redacted, and credential rotation plus Git-history cleanup remain mandatory. The report also flags that current digest delivery reloads all stored matches rather than only matches created in the latest run.
 - **Evidence:** `docs/final-project-report.md`, `docs/report-screenshots/`, `docs/exam-journal.md`, and the command outputs above.
@@ -416,7 +427,7 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Approach and reasoning:** Treated GPT/model and reasoning-level details as developer-recorded evidence rather than platform telemetry. Distinguished configured subagents from verified invocation because no complete automatic agent-call audit trail exists. Allowed the report to exceed six pages at the developer's explicit request.
 - **AI-assisted workflow:** Codex inspected `plans.md`, the three agent TOML files, `.codex/config.toml`, `$fullstack-feature`, the locally installed `beautifulsoup-parsing` skill from skills.sh, the journal, personal notes, and all image/PDF evidence. It rendered all three pages of both digest PDFs and created local privacy-safe copies of all screenshots.
 - **AI tool choice:** Codex was used to correlate repository configuration, recorded prompts, model-selection notes, debugging history, and visual evidence. The local BeautifulSoup skill and evidence skill are described as specialized workflow guidance rather than separate AI models.
-- **Key prompts:** “Tell more about how we created subagents and skills”; “Tell more about how we used plan mode with GPT 5.5 and high reasoning effort”; “I want to include all the screenshots.”
+- **Key prompts:** вЂњTell more about how we created subagents and skillsвЂќ; вЂњTell more about how we used plan mode with GPT 5.5 and high reasoning effortвЂќ; вЂњI want to include all the screenshots.вЂќ
 - **Validation:** Verified that `docs/report-screenshots/` contains the registration, verification, reset, dashboard, sale form, rent form, scheduler, stored-alerts image, and all six rendered digest pages. Visually inspected the privacy masks. Application tests were not rerun because this change affects only documentation and generated evidence images.
 - **Challenges and learning:** The original screenshots contained an email address, personal name, verification/reset tokens, and Gmail message URLs. The final report uses sanitized copies and keeps the originals out of the embedded public appendix. The expanded report intentionally exceeds the normal page guideline.
 - **Evidence:** `docs/final-project-report.md`, `docs/report-screenshots/`, `plans.md`, `.codex/agents/`, `.agents/skills/fullstack-feature/`, `skills/beautifulsoup-parsing/`, and `docs/exam-journal.md`.
