@@ -6,6 +6,9 @@
     <title>{{ app_name }}</title>
     <meta name="description" content="Create property alerts for homes in Sofia and receive new matching listings automatically." />
     <link rel="stylesheet" href="/static/app.css" />
+    {% if current_user %}
+    <meta name="csrf-token" content="{{ current_user.csrf_token }}" />
+    {% endif %}
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -21,279 +24,388 @@
           <span><strong>{{ app_name }}</strong><small>Sofia property journal</small></span>
         </a>
         <nav class="site-nav" aria-label="Dashboard navigation">
+          {% if current_user %}
           <a href="#create-alert">Create alert</a>
           <a href="#automation">Automation</a>
           <a href="#saved-alerts">Stored alerts</a>
+          {% else %}
+          <a href="#register">Register</a>
+          <a href="#login">Login</a>
+          <a href="#reset-password">Reset password</a>
+          {% endif %}
         </nav>
       </header>
 
       <main id="main-content">
-      <section class="hero" aria-labelledby="page-title">
-        <div class="hero-masthead" aria-hidden="true">
-          <span>The</span>
-          <strong>Property Finder</strong>
-          <small>Sofia edition &middot; 2026</small>
-        </div>
-        <div class="hero-grid">
-          <div class="hero-copy-block">
-            <p class="eyebrow">
-              <span class="status-dot" aria-hidden="true"></span>
-              {{ listing_mode_label }} connected
-            </p>
-            <h1 id="page-title">Look closer. Your next place is already on the map.</h1>
-            <p class="hero-copy">
-              Describe the home you have in mind in Sofia. We watch the {{ listing_mode_description }} and collect the places worth seeing.
-            </p>
-            <a class="text-link" href="#create-alert">Start your search <span aria-hidden="true">&rarr;</span></a>
+        <section class="hero" aria-labelledby="page-title">
+          <div class="hero-masthead" aria-hidden="true">
+            <span>The</span>
+            <strong>Property Finder</strong>
+            <small>Sofia edition &middot; 2026</small>
           </div>
-          <div class="hero-art" aria-hidden="true">
-            <span class="burst burst-one"></span>
-            <span class="burst burst-two"></span>
-            <div class="map-lens">
-              <span class="map-road road-one"></span>
-              <span class="map-road road-two"></span>
-              <span class="map-road road-three"></span>
-              <span class="map-pin pin-one"></span>
-              <span class="map-pin pin-two"></span>
-              <span class="map-pin pin-three"></span>
+          <div class="hero-grid">
+            <div class="hero-copy-block">
+              <p class="eyebrow">
+                <span class="status-dot" aria-hidden="true"></span>
+                {{ listing_mode_label }} connected
+              </p>
+              <h1 id="page-title">Look closer. Your next place is already on the map.</h1>
+              {% if current_user %}
+              <p class="hero-copy">
+                Welcome back, {{ current_user.email }}. Describe the home you have in mind in Sofia, then run your own alerts manually or on your own schedule.
+              </p>
+              {% else %}
+              <p class="hero-copy">
+                Create an account, verify your email, and keep a private Sofia-only property dashboard with your own scheduler and digest controls.
+              </p>
+              {% endif %}
+              <a class="text-link" href="{% if current_user %}#create-alert{% else %}#register{% endif %}">Start your search <span aria-hidden="true">&rarr;</span></a>
             </div>
-            <span class="lens-handle"></span>
-          </div>
-        </div>
-        <div class="metric-grid" aria-label="Property alert summary">
-          <div class="metric">
-            <span>Properties in view</span>
-            <strong>{{ listing_count }}</strong>
-          </div>
-          <div class="metric">
-            <span>Searches kept</span>
-            <strong>{{ preview_groups | length }}</strong>
-          </div>
-          <p class="hero-note">A quiet daily edit of homes in Sofia, shaped around your criteria.</p>
-        </div>
-      </section>
-
-      <section class="content-grid">
-        <section class="panel create-alert-panel" id="create-alert" aria-labelledby="create-alert-title">
-          <div class="section-heading">
-            <span class="section-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" focusable="false"><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></svg>
-            </span>
-            <div>
-              <p class="section-kicker">New property search</p>
-              <h2 id="create-alert-title">Create an alert</h2>
+            <div class="hero-art" aria-hidden="true">
+              <span class="burst burst-one"></span>
+              <span class="burst burst-two"></span>
+              <div class="map-lens">
+                <span class="map-road road-one"></span>
+                <span class="map-road road-two"></span>
+                <span class="map-road road-three"></span>
+                <span class="map-pin pin-one"></span>
+                <span class="map-pin pin-two"></span>
+                <span class="map-pin pin-three"></span>
+              </div>
+              <span class="lens-handle"></span>
             </div>
           </div>
-          <p class="section-intro">Tell us what home you are looking for. We will preview current matches and save the criteria for future searches.</p>
-
-          <form id="subscription-form">
-            <fieldset class="form-section">
-              <legend>Contact</legend>
-              <div class="form-grid">
-              <label class="full">
-                <span class="label-text">Email address</span>
-                <input name="email" type="email" placeholder="you@example.com" autocomplete="email" aria-describedby="email-help" required />
-                <span class="field-help" id="email-help">New matches will be prepared for this address.</span>
-              </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="form-section">
-              <legend>Property</legend>
-              <div class="form-grid">
-                <label>
-                  <span class="label-text">Transaction</span>
-                  <select name="transaction_type" required>
-                    {% for value, slug in transaction_types.items() %}
-                    <option value="{{ value }}">{{ value | title }}</option>
-                    {% endfor %}
-                  </select>
-                </label>
-                <label>
-                  <span class="label-text">Property type</span>
-                  <select name="property_type" required>
-                    {% for value, slug in property_types.items() %}
-                    <option value="{{ value }}">{{ value | title }}</option>
-                    {% endfor %}
-                  </select>
-                </label>
-                <label>
-                  <span class="label-text">City</span>
-                  <select name="city" id="city-select" aria-describedby="city-help" required></select>
-                  <span class="field-help" id="city-help">This proof of concept currently supports Sofia only.</span>
-                </label>
-                <label>
-                  <span class="label-text">Rooms</span>
-                  <select name="rooms">
-                    <option value="">Any</option>
-                    {% for value, slug in room_options.items() %}
-                    <option value="{{ value }}">{{ value }}</option>
-                    {% endfor %}
-                  </select>
-                </label>
-                <label class="full">
-                  <span class="label-text">Preferred districts</span>
-                  <select name="districts" id="district-select" aria-describedby="district-help" multiple></select>
-                  <span class="field-help" id="district-help">Choose one or more areas. On desktop, hold Ctrl or Cmd to select several.</span>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="form-section">
-              <legend>Budget and size</legend>
-              <div class="form-grid">
-              <label>
-                <span class="label-text">Minimum price</span>
-                <div class="input-affix"><span>&euro;</span><input name="min_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="150000" /></div>
-              </label>
-              <label>
-                <span class="label-text">Maximum price</span>
-                <div class="input-affix"><span>&euro;</span><input name="max_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="350000" /></div>
-              </label>
-              <label class="full">
-                <span class="label-text">Minimum area</span>
-                <div class="input-affix affix-end"><input name="min_area_sqm" type="number" min="0" step="1" inputmode="numeric" placeholder="70" /><span>m&sup2;</span></div>
-              </label>
-              </div>
-            </fieldset>
-
-            <div class="form-actions">
-              <button class="primary" id="subscription-save-button" type="submit" data-default-label="Create property alert" data-busy-label="Searching properties...">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v18M3 12h18" /></svg>
-                <span>Create property alert</span>
-              </button>
-              <span class="secure-note">
-                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z" /></svg>
-                Your search stays private
-              </span>
+          <div class="metric-grid" aria-label="Property alert summary">
+            <div class="metric">
+              <span>Properties in view</span>
+              <strong>{{ listing_count }}</strong>
             </div>
-            <div id="flash" class="flash" role="status" aria-live="polite" aria-atomic="true"></div>
-          </form>
+            <div class="metric">
+              <span>Searches kept</span>
+              <strong>{{ preview_groups | length }}</strong>
+            </div>
+            <p class="hero-note">A quiet daily edit of homes in Sofia, shaped around your criteria.</p>
+          </div>
         </section>
 
-        <div class="dashboard-stack" aria-label="Alert controls and saved alerts">
-          <section class="panel dashboard-section scheduler-box" id="automation" aria-labelledby="automation-title">
-            <div class="section-heading section-heading--split">
+        {% if flash_notice or flash_error %}
+        <section class="panel flash-panel">
+          <div class="flash {% if flash_error %}error{% else %}success{% endif %}">{{ flash_error or flash_notice }}</div>
+        </section>
+        {% endif %}
+
+        {% if current_user %}
+        <section class="panel account-panel">
+          <div class="section-heading section-heading--split">
+            <div>
+              <p class="section-kicker">Signed in account</p>
+              <h2>{{ current_user.email }}</h2>
+              <p class="section-intro">Your subscriptions, manual runs, and scheduler now belong only to your account.</p>
+            </div>
+            <form method="post" action="/auth/logout" class="inline-form">
+              <input type="hidden" name="csrf_token" value="{{ current_user.csrf_token }}" />
+              <button class="ghost" type="submit">Log out</button>
+            </form>
+          </div>
+        </section>
+
+        <section class="content-grid">
+          <section class="panel create-alert-panel" id="create-alert" aria-labelledby="create-alert-title">
+            <div class="section-heading">
+              <span class="section-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false"><path d="M12 21s7-5.1 7-12a7 7 0 1 0-14 0c0 6.9 7 12 7 12Z" /><circle cx="12" cy="9" r="2.5" /></svg>
+              </span>
               <div>
-                <p class="section-kicker">Automatic monitoring</p>
-                <h2 id="automation-title">Scheduler settings</h2>
-                <p class="section-intro">Choose one app-wide schedule for automated Sofia property searches.</p>
-              </div>
-              <div class="scheduler-meta" aria-label="Scheduler status">
-                <span class="pill">Mode: <span id="scheduler-mode-pill">{{ scheduler_config.mode }}</span></span>
-                <span class="pill">Running: <span id="scheduler-running-pill">{{ "Yes" if scheduler_config.running else "No" }}</span></span>
+                <p class="section-kicker">New property search</p>
+                <h2 id="create-alert-title">Create an alert</h2>
               </div>
             </div>
-            <form id="scheduler-form">
-              <div class="scheduler-grid">
-                <label>
-                  Scheduler enabled
-                  <select name="enabled" id="scheduler-enabled">
-                    <option value="true" {% if scheduler_config.enabled %}selected{% endif %}>Enabled</option>
-                    <option value="false" {% if not scheduler_config.enabled %}selected{% endif %}>Disabled</option>
-                  </select>
-                </label>
-                <label>
-                  Mode
-                  <select name="mode" id="scheduler-mode">
-                    <option value="interval" {% if scheduler_config.mode == "interval" %}selected{% endif %}>Every N minutes</option>
-                    <option value="daily_time" {% if scheduler_config.mode == "daily_time" %}selected{% endif %}>Once per day</option>
-                  </select>
-                </label>
-                <label id="interval-group">
-                  Interval minutes
-                  <input name="interval_minutes" id="scheduler-interval" type="number" min="1" max="1440" value="{{ scheduler_config.interval_minutes }}" />
-                </label>
-                <label id="time-group">
-                  Daily run time
-                  <input name="daily_run_time" id="scheduler-time" type="time" value="{{ scheduler_config.daily_run_time }}" />
-                </label>
+            <p class="section-intro">Tell us what home you are looking for. We will preview current matches and save the criteria for future searches.</p>
+
+            <form id="subscription-form">
+              <fieldset class="form-section">
+                <legend>Contact</legend>
+                <div class="form-grid">
+                  <label class="full readonly-field">
+                    <span class="label-text">Delivery email</span>
+                    <input type="email" value="{{ current_user.email }}" autocomplete="email" readonly />
+                    <span class="field-help" id="email-help">This account address will receive your digests.</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend>Property</legend>
+                <div class="form-grid">
+                  <label>
+                    <span class="label-text">Transaction</span>
+                    <select name="transaction_type" required>
+                      {% for value, slug in transaction_types.items() %}
+                      <option value="{{ value }}">{{ value | title }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>
+                    <span class="label-text">Property type</span>
+                    <select name="property_type" required>
+                      {% for value, slug in property_types.items() %}
+                      <option value="{{ value }}">{{ value | title }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>
+                    <span class="label-text">City</span>
+                    <select name="city" id="city-select" aria-describedby="city-help" required></select>
+                    <span class="field-help" id="city-help">This proof of concept currently supports Sofia only.</span>
+                  </label>
+                  <label>
+                    <span class="label-text">Rooms</span>
+                    <select name="rooms">
+                      <option value="">Any</option>
+                      {% for value, slug in room_options.items() %}
+                      <option value="{{ value }}">{{ value }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label class="full">
+                    <span class="label-text">Preferred districts</span>
+                    <select name="districts" id="district-select" aria-describedby="district-help" multiple></select>
+                    <span class="field-help" id="district-help">Choose one or more areas. On desktop, hold Ctrl or Cmd to select several.</span>
+                  </label>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend>Budget and size</legend>
+                <div class="form-grid">
+                  <label>
+                    <span class="label-text">Minimum price</span>
+                    <div class="input-affix"><span>&euro;</span><input name="min_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="150000" /></div>
+                  </label>
+                  <label>
+                    <span class="label-text">Maximum price</span>
+                    <div class="input-affix"><span>&euro;</span><input name="max_price_eur" type="number" min="0" step="1000" inputmode="numeric" placeholder="350000" /></div>
+                  </label>
+                  <label class="full">
+                    <span class="label-text">Minimum area</span>
+                    <div class="input-affix affix-end"><input name="min_area_sqm" type="number" min="0" step="1" inputmode="numeric" placeholder="70" /><span>m&sup2;</span></div>
+                  </label>
+                </div>
+              </fieldset>
+
+              <div class="form-actions">
+                <button class="primary" id="subscription-save-button" type="submit" data-default-label="Create property alert" data-busy-label="Searching properties...">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v18M3 12h18" /></svg>
+                  <span>Create property alert</span>
+                </button>
+                <span class="secure-note">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z" /></svg>
+                  Your search stays private
+                </span>
               </div>
-              <div class="section-actions">
-                <button class="primary" id="scheduler-save-button" type="submit" data-default-label="Save scheduler" data-busy-label="Saving scheduler...">Save scheduler</button>
-                <span class="muted-copy">Next run: <span id="next-run-label">{{ scheduler_config.next_run_at or "Not scheduled" }}</span></span>
-              </div>
+              <div id="flash" class="flash" role="status" aria-live="polite" aria-atomic="true"></div>
             </form>
           </section>
 
-          <section class="panel dashboard-section stored-alerts-section" id="saved-alerts" aria-labelledby="saved-alerts-title">
-            <div class="section-heading section-heading--split">
-              <div>
-                <p class="section-kicker">Your property searches</p>
-                <h2 id="saved-alerts-title">Stored alerts</h2>
-                <p class="section-intro">Review saved criteria and the latest matching properties for each alert.</p>
-              </div>
-              <div class="section-actions section-actions--compact">
-                <button id="run-job-button" class="primary" type="button" data-default-label="Run daily job" data-busy-label="Preparing your digest...">Run daily job</button>
-                <span class="muted-copy">Check for new Sofia matches now.</span>
-              </div>
-            </div>
-
-          {% if preview_groups %}
-          <div class="alerts-panel__list">
-            <div class="subscription-grid">
-              {% for group in preview_groups %}
-              <article class="subscription-card">
-                <h3>{{ group.subscription.city }} &bull; {{ group.subscription.property_type | title }}</h3>
-                <p class="muted-copy">{{ group.subscription.email }}</p>
-                <div class="pill-row">
-                  <span class="pill">{{ group.subscription.transaction_type | title }}</span>
-                  <span class="pill {% if not group.subscription.active %}inactive{% endif %}">{% if group.subscription.active %}Active{% else %}Inactive{% endif %}</span>
-                  {% if group.subscription.rooms %}<span class="pill">{{ group.subscription.rooms }} rooms</span>{% endif %}
-                  {% if group.subscription.min_price_eur %}<span class="pill">From &euro;{{ "%.0f"|format(group.subscription.min_price_eur) }}</span>{% endif %}
-                  {% if group.subscription.max_price_eur %}<span class="pill">To &euro;{{ "%.0f"|format(group.subscription.max_price_eur) }}</span>{% endif %}
+          <div class="dashboard-stack" aria-label="Alert controls and saved alerts">
+            <section class="panel dashboard-section scheduler-box" id="automation" aria-labelledby="automation-title">
+              <div class="section-heading section-heading--split">
+                <div>
+                  <p class="section-kicker">Automatic monitoring</p>
+                  <h2 id="automation-title">Your scheduler</h2>
+                  <p class="section-intro">Choose your own schedule for automated Sofia property searches.</p>
                 </div>
-                {% if group.subscription.districts %}
-                <p class="muted-copy">Districts: {{ group.subscription.districts | join(", ") }}</p>
-                {% endif %}
+                <div class="scheduler-meta" aria-label="Scheduler status">
+                  <span class="pill">Mode: <span id="scheduler-mode-pill">{{ scheduler_config.mode }}</span></span>
+                  <span class="pill">Running: <span id="scheduler-running-pill">{{ "Yes" if scheduler_config.running else "No" }}</span></span>
+                </div>
+              </div>
+              <form id="scheduler-form">
+                <div class="scheduler-grid">
+                  <label>
+                    Scheduler enabled
+                    <select name="enabled" id="scheduler-enabled">
+                      <option value="true" {% if scheduler_config.enabled %}selected{% endif %}>Enabled</option>
+                      <option value="false" {% if not scheduler_config.enabled %}selected{% endif %}>Disabled</option>
+                    </select>
+                  </label>
+                  <label>
+                    Mode
+                    <select name="mode" id="scheduler-mode">
+                      <option value="interval" {% if scheduler_config.mode == "interval" %}selected{% endif %}>Every N minutes</option>
+                      <option value="daily_time" {% if scheduler_config.mode == "daily_time" %}selected{% endif %}>Once per day</option>
+                    </select>
+                  </label>
+                  <label id="interval-group">
+                    Interval minutes
+                    <input name="interval_minutes" id="scheduler-interval" type="number" min="1" max="1440" value="{{ scheduler_config.interval_minutes }}" />
+                  </label>
+                  <label id="time-group">
+                    Daily run time
+                    <input name="daily_run_time" id="scheduler-time" type="time" value="{{ scheduler_config.daily_run_time }}" />
+                  </label>
+                </div>
+                <div class="section-actions">
+                  <button class="primary" id="scheduler-save-button" type="submit" data-default-label="Save scheduler" data-busy-label="Saving scheduler...">Save scheduler</button>
+                  <span class="muted-copy">Next run: <span id="next-run-label">{{ scheduler_config.next_run_at or "Not scheduled" }}</span></span>
+                </div>
+              </form>
+            </section>
 
-                {% if group.matches %}
-                <div class="listing-grid" style="margin-bottom: 12px;">
-                  {% for listing in group.matches %}
-                  <div class="listing">
-                    <a href="{{ listing.url }}" target="_blank" rel="noreferrer"><strong>{{ listing.title }}</strong></a>
-                    <p class="listing-meta">
-                      {{ listing.city }}{% if listing.district %}, {{ listing.district }}{% endif %}<br />
-                      {% if listing.price_eur %}&euro;{{ "%.0f"|format(listing.price_eur) }}{% else %}Price missing{% endif %}
-                      &bull; {% if listing.area_sqm %}{{ "%.0f"|format(listing.area_sqm) }} sq.m{% else %}Area missing{% endif %}
-                    </p>
-                  </div>
+            <section class="panel dashboard-section stored-alerts-section" id="saved-alerts" aria-labelledby="saved-alerts-title">
+              <div class="section-heading section-heading--split">
+                <div>
+                  <p class="section-kicker">Your property searches</p>
+                  <h2 id="saved-alerts-title">Stored alerts</h2>
+                  <p class="section-intro">Review saved criteria and the latest matching properties for each alert.</p>
+                </div>
+                <div class="section-actions section-actions--compact">
+                  <button id="run-job-button" class="primary" type="button" data-default-label="Run daily job" data-busy-label="Preparing your digest...">Run daily job</button>
+                  <span class="muted-copy">Check for new Sofia matches now.</span>
+                </div>
+              </div>
+
+              {% if preview_groups %}
+              <div class="alerts-panel__list">
+                <div class="subscription-grid">
+                  {% for group in preview_groups %}
+                  <article class="subscription-card">
+                    <h3>{{ group.subscription.city }} &bull; {{ group.subscription.property_type | title }}</h3>
+                    <p class="muted-copy">{{ group.subscription.email }}</p>
+                    <div class="pill-row">
+                      <span class="pill">{{ group.subscription.transaction_type | title }}</span>
+                      <span class="pill {% if not group.subscription.active %}inactive{% endif %}">{% if group.subscription.active %}Active{% else %}Inactive{% endif %}</span>
+                      {% if group.subscription.rooms %}<span class="pill">{{ group.subscription.rooms }} rooms</span>{% endif %}
+                      {% if group.subscription.min_price_eur %}<span class="pill">From &euro;{{ "%.0f"|format(group.subscription.min_price_eur) }}</span>{% endif %}
+                      {% if group.subscription.max_price_eur %}<span class="pill">To &euro;{{ "%.0f"|format(group.subscription.max_price_eur) }}</span>{% endif %}
+                    </div>
+                    {% if group.subscription.districts %}
+                    <p class="muted-copy">Districts: {{ group.subscription.districts | join(", ") }}</p>
+                    {% endif %}
+
+                    {% if group.matches %}
+                    <div class="listing-grid" style="margin-bottom: 12px;">
+                      {% for listing in group.matches %}
+                      <div class="listing">
+                        <a href="{{ listing.url }}" target="_blank" rel="noreferrer"><strong>{{ listing.title }}</strong></a>
+                        <p class="listing-meta">
+                          {{ listing.city }}{% if listing.district %}, {{ listing.district }}{% endif %}<br />
+                          {% if listing.price_eur %}&euro;{{ "%.0f"|format(listing.price_eur) }}{% else %}Price missing{% endif %}
+                          &bull; {% if listing.area_sqm %}{{ "%.0f"|format(listing.area_sqm) }} sq.m{% else %}Area missing{% endif %}
+                        </p>
+                      </div>
+                      {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty" style="margin-bottom: 12px;">No matching listings found yet.</div>
+                    {% endif %}
+
+                    {% if group.subscription.active %}
+                    <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/unsubscribe" data-method="POST">
+                      <button class="ghost unsubscribe-button" type="submit">Unsubscribe</button>
+                    </form>
+                    {% else %}
+                    <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/subscribe" data-method="POST">
+                      <button class="primary resubscribe-button" type="submit">Subscribe again</button>
+                    </form>
+                    {% endif %}
+                    <button class="ghost delete-button" type="button" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}">Delete permanently</button>
+                  </article>
                   {% endfor %}
                 </div>
-                {% else %}
-                <div class="empty" style="margin-bottom: 12px;">No matching listings found yet.</div>
-                {% endif %}
+              </div>
+              {% else %}
+              <div class="empty">No subscriptions yet. Create one to see preview matches appear here.</div>
+              {% endif %}
+            </section>
 
-                {% if group.subscription.active %}
-                <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/unsubscribe" data-method="POST">
-                  <button class="ghost unsubscribe-button" type="submit">Unsubscribe</button>
-                </form>
+            <section class="panel dashboard-section recent-runs-section" aria-labelledby="recent-runs-title">
+              <h2 id="recent-runs-title">Recent job runs</h2>
+              <div id="job-runs" class="muted-copy">
+                {% if recent_jobs %}
+                  {% for job in recent_jobs %}
+                  <div style="padding: 10px 0; border-top: 1px solid var(--line);">
+                    <strong>#{{ job.id }}</strong> {{ job.provider }} {{ job.status }}<br />
+                    Listings seen: {{ job.listings_seen }}, matches: {{ job.matches_created }}, emails: {{ job.emails_sent }}
+                  </div>
+                  {% endfor %}
                 {% else %}
-                <form class="subscription-action-form" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}/subscribe" data-method="POST">
-                  <button class="primary resubscribe-button" type="submit">Subscribe again</button>
-                </form>
+                  Open the page and run the job to populate the log.
                 {% endif %}
-                <button class="ghost delete-button" type="button" data-url="/subscriptions/{{ group.subscription.unsubscribe_token }}">Delete permanently</button>
-              </article>
-              {% endfor %}
-            </div>
+              </div>
+            </section>
           </div>
-          {% else %}
-          <div class="empty">No subscriptions yet. Create one to see preview matches appear here.</div>
-          {% endif %}
+        </section>
+        {% else %}
+        <section class="content-grid auth-grid">
+          <section class="panel auth-panel" id="register">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Private account</p>
+                <h2>Create your account</h2>
+              </div>
+            </div>
+            <p class="section-intro">Register with your email, then verify it before you start receiving digests.</p>
+            <form method="post" action="/auth/register" class="stack-form">
+              <label>
+                <span class="label-text">Email address</span>
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <label>
+                <span class="label-text">Password</span>
+                <input name="password" type="password" autocomplete="new-password" minlength="15" required />
+                <span class="field-help">Use at least 15 characters. Spaces are allowed.</span>
+              </label>
+              <button class="primary" type="submit">Create account</button>
+            </form>
           </section>
 
-          <section class="panel dashboard-section recent-runs-section" aria-labelledby="recent-runs-title">
-            <h2 id="recent-runs-title">Recent job runs</h2>
-            <div id="job-runs" class="muted-copy">Open the page and run the job to populate the log.</div>
+          <section class="panel auth-panel" id="login">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Welcome back</p>
+                <h2>Log in</h2>
+              </div>
+            </div>
+            <p class="section-intro">Sign in to manage your own subscriptions, manual runs, and scheduler.</p>
+            <form method="post" action="/auth/login" class="stack-form">
+              <label>
+                <span class="label-text">Email address</span>
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <label>
+                <span class="label-text">Password</span>
+                <input name="password" type="password" autocomplete="current-password" required />
+              </label>
+              <button class="primary" type="submit">Sign in</button>
+            </form>
           </section>
-        </div>
-      </section>
+
+          <section class="panel auth-panel" id="reset-password">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Account recovery</p>
+                <h2>Reset password</h2>
+              </div>
+            </div>
+            <p class="section-intro">We will send a secure reset link if the address belongs to a verified account.</p>
+            <form method="post" action="/auth/password/request" class="stack-form">
+              <label>
+                <span class="label-text">Email address</span>
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+              <button class="ghost" type="submit">Send reset link</button>
+            </form>
+          </section>
+        </section>
+        {% endif %}
       </main>
     </div>
 
+    {% if current_user %}
     <script>
       const cityOptions = {{ city_options_json | safe }};
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
       const citySelect = document.getElementById("city-select");
       const districtSelect = document.getElementById("district-select");
       const form = document.getElementById("subscription-form");
@@ -346,17 +458,15 @@
           jobRuns.textContent = "No job runs yet.";
           return;
         }
-        jobRuns.innerHTML = data.jobs.map((job) => `
-          <div style="padding: 10px 0; border-top: 1px solid var(--line);">
-            <strong>#${job.id}</strong> ${job.provider} ${job.status}<br />
-            Listings seen: ${job.listings_seen}, matches: ${job.matches_created}, emails: ${job.emails_sent}
-          </div>
-        `).join("");
+        const rows = data.jobs.map(function (job) {
+          return '<div style="padding: 10px 0; border-top: 1px solid var(--line);"><strong>#' + job.id + '</strong> ' + job.provider + ' ' + job.status + '<br />Listings seen: ' + job.listings_seen + ', matches: ' + job.matches_created + ', emails: ' + job.emails_sent + '</div>';
+        });
+        jobRuns.innerHTML = rows.join("");
       }
 
       function showMessage(text, type) {
         flash.textContent = text;
-        flash.className = `flash ${type}`;
+        flash.className = "flash " + type;
       }
 
       function setBusyState(button, busy, busyLabel) {
@@ -378,14 +488,20 @@
         button.removeAttribute("aria-busy");
       }
 
+      function jsonHeaders() {
+        return {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrfToken,
+        };
+      }
+
       renderCities();
       renderDistricts();
       renderSchedulerMode();
       citySelect.addEventListener("change", renderDistricts);
       schedulerMode.addEventListener("change", renderSchedulerMode);
-      refreshJobRuns();
 
-      form.addEventListener("submit", async (event) => {
+      form.addEventListener("submit", async function (event) {
         event.preventDefault();
         setBusyState(subscriptionSaveButton, true, subscriptionSaveButton?.dataset.busyLabel || "Searching listings...");
         showMessage("Searching Sofia listings for your selected criteria...", "success");
@@ -393,11 +509,10 @@
         try {
           const formData = new FormData(form);
           const payload = {
-            email: formData.get("email"),
             transaction_type: formData.get("transaction_type"),
             property_type: formData.get("property_type"),
             city: formData.get("city"),
-            districts: Array.from(districtSelect.selectedOptions).map((option) => option.value),
+            districts: Array.from(districtSelect.selectedOptions).map(function (option) { return option.value; }),
             min_price_eur: formData.get("min_price_eur") ? Number(formData.get("min_price_eur")) : null,
             max_price_eur: formData.get("max_price_eur") ? Number(formData.get("max_price_eur")) : null,
             rooms: formData.get("rooms") || null,
@@ -406,7 +521,7 @@
 
           const response = await fetch("/subscriptions", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: jsonHeaders(),
             body: JSON.stringify(payload),
           });
 
@@ -419,15 +534,15 @@
           }
 
           const data = await response.json();
-          showMessage(`Saved. Searching complete. ${data.preview_match_count} matching listings found. Reloading...`, "success");
-          window.setTimeout(() => window.location.reload(), 500);
+          showMessage("Saved. Searching complete. " + data.preview_match_count + " matching listings found. Reloading...", "success");
+          window.setTimeout(function () { window.location.reload(); }, 500);
         } catch (error) {
-          showMessage(`Could not save the subscription. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
+          showMessage("Could not save the subscription. " + (error instanceof Error ? error.message : "Network request failed."), "error");
           setBusyState(subscriptionSaveButton, false);
         }
       });
 
-      schedulerForm.addEventListener("submit", async (event) => {
+      schedulerForm.addEventListener("submit", async function (event) {
         event.preventDefault();
         setBusyState(schedulerSaveButton, true, schedulerSaveButton?.dataset.busyLabel || "Saving scheduler...");
         showMessage("Saving scheduler settings...", "success");
@@ -440,7 +555,7 @@
           };
           const response = await fetch("/scheduler/settings", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: jsonHeaders(),
             body: JSON.stringify(payload),
           });
           const data = await response.json();
@@ -456,25 +571,25 @@
           showMessage("Scheduler settings saved.", "success");
           setBusyState(schedulerSaveButton, false);
         } catch (error) {
-          showMessage(`Could not save scheduler settings. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
+          showMessage("Could not save scheduler settings. " + (error instanceof Error ? error.message : "Network request failed."), "error");
           setBusyState(schedulerSaveButton, false);
         }
       });
 
-      runJobButton.addEventListener("click", async () => {
+      runJobButton.addEventListener("click", async function () {
         setBusyState(runJobButton, true, runJobButton?.dataset.busyLabel || "Preparing your digest...");
         showMessage("Preparing your digest and checking Sofia for new listings...", "success");
         try {
-          const response = await fetch("/jobs/run", { method: "POST" });
+          const response = await fetch("/jobs/run", { method: "POST", headers: { "X-CSRF-Token": csrfToken } });
           if (!response.ok) {
-            const data = await response.json().catch(() => ({}));
+            const data = await response.json().catch(function () { return {}; });
             showMessage(data.error || "Could not run the daily job.", "error");
             setBusyState(runJobButton, false);
             return;
           }
           const data = await response.json();
           if (data.email_errors?.length) {
-            showMessage(`Daily job finished, but no email was delivered. ${data.email_errors[0]}`, "error");
+            showMessage("Daily job finished, but no email was delivered. " + data.email_errors[0], "error");
             await refreshJobRuns();
             setBusyState(runJobButton, false);
             return;
@@ -485,49 +600,50 @@
             setBusyState(runJobButton, false);
             return;
           }
-          showMessage(`Digest ready. ${data.emails_sent} email(s) sent. Reloading...`, "success");
+          showMessage("Digest ready. " + data.emails_sent + " email(s) sent. Reloading...", "success");
           await refreshJobRuns();
           setBusyState(runJobButton, false);
-          window.setTimeout(() => window.location.reload(), 500);
+          window.setTimeout(function () { window.location.reload(); }, 500);
         } catch (error) {
-          showMessage(`Could not run the daily job. ${error instanceof Error ? error.message : "Network request failed."}`, "error");
+          showMessage("Could not run the daily job. " + (error instanceof Error ? error.message : "Network request failed."), "error");
           setBusyState(runJobButton, false);
         }
       });
 
-      for (const form of document.querySelectorAll(".subscription-action-form")) {
-        form.addEventListener("submit", async (event) => {
+      for (const actionForm of document.querySelectorAll(".subscription-action-form")) {
+        actionForm.addEventListener("submit", async function (event) {
           event.preventDefault();
-          const actionButton = form.querySelector("button");
-          const isReactivate = form.dataset.url?.includes("/subscribe");
+          const actionButton = actionForm.querySelector("button");
+          const isReactivate = actionForm.dataset.url?.includes("/subscribe");
           setBusyState(actionButton, true, isReactivate ? "Searching again..." : "Unsubscribing...");
           showMessage(isReactivate ? "Reactivating the alert and searching based on your criteria..." : "Deactivating the alert and clearing the current matches...", "success");
-          const response = await fetch(form.dataset.url, { method: form.dataset.method || "POST" });
+          const response = await fetch(actionForm.dataset.url, { method: actionForm.dataset.method || "POST", headers: { "X-CSRF-Token": csrfToken } });
           if (!response.ok) {
             const failedAction = isReactivate ? "subscribe again" : "unsubscribe this alert";
-            showMessage(`Could not ${failedAction}.`, "error");
+            showMessage("Could not " + failedAction + ".", "error");
             setBusyState(actionButton, false);
             return;
           }
           const data = await response.json();
-          const message = isReactivate ? `Subscription reactivated. ${data.preview_match_count} matching listings found. Reloading...` : "Subscription deactivated. Reloading...";
+          const message = isReactivate ? "Subscription reactivated. " + data.preview_match_count + " matching listings found. Reloading..." : "Subscription deactivated. Reloading...";
           showMessage(message, "success");
-          window.setTimeout(() => window.location.reload(), 500);
+          window.setTimeout(function () { window.location.reload(); }, 500);
         });
       }
 
       for (const button of document.querySelectorAll(".delete-button")) {
-        button.addEventListener("click", async () => {
+        button.addEventListener("click", async function () {
           if (!window.confirm("Permanently delete this subscription and its match history?")) return;
-          const response = await fetch(button.dataset.url, { method: "DELETE" });
+          const response = await fetch(button.dataset.url, { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } });
           if (!response.ok) {
             showMessage("Could not delete this subscription.", "error");
             return;
           }
           showMessage("Subscription deleted permanently. Reloading...", "success");
-          window.setTimeout(() => window.location.reload(), 500);
+          window.setTimeout(function () { window.location.reload(); }, 500);
         });
       }
     </script>
+    {% endif %}
   </body>
 </html>

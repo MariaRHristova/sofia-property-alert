@@ -1,4 +1,4 @@
-﻿from functools import lru_cache
+from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     app_title: str = "Sofia Property Alert"
     app_base_url: str = "http://127.0.0.1:8000"
     app_timezone: str = "Europe/Sofia"
+    app_secure_cookies: bool = False
     database_url: str = "sqlite:///./var/bulgaria-property-alert.db"
     listing_provider: str = "fixture"
     imot_live_enabled: bool = False

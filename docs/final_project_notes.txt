@@ -1,0 +1,83 @@
+1. Created a github repository
+2. Asked if my idea will be enough for the exam
+3. Created a skill to journal my work based on the project-assignment.docx
+4. Created an agents.md file based on the link: https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/
+5. [TO-DO:] Ask how to download skills from skills.sh 
+6. Downloaded a web scraper skill for the lirary Beautiful locally for the project
+   Soup: https://www.skills.sh/mindrally/skills/beautifulsoup-parsing
+7. Created a plan using gpt 5.5 high reasoning and saved the plan in PLANS.MD
+8. Started implmenting the plan - basic structure (gpt 5.4 Medium reasoning)
+9. In another session: Created three sub-agents - backend, front end, and integration and a full stack skill to delegate the tasks to the subagents
+   (gpt 5.5 Medium Reasoning)  (key prompt) 
+10.  Key prompt: Ok, we can start implementing the plan using the newly created  subagents and skills. Focus on minimal working proof of concept. Test will be done later.
+(5.4 medium) 
+11. Confused wheather the subagents were used and if there were any conflicts between them, orchestrating is a challenge. 
+    --> it took all my tokens in a very short time :(
+12. It implemented a POC but it does not work and now I am debugging, when I click on button nothing happens.
+Not able to use the embedded browser. 
+13. Run daily job added, but no real email send --> told it to send a real email. 
+14. Email delivery. Form my own gmail. Email module scaffolded.
+ Challanges in debugging and setting up credentials.  yuncovqccagfbvig
+15. I will add to Agents.MD to use a real browser
+Use @Browser.
+
+Open http://http://127.0.0.1:8000/
+
+Reproduce the bug on the page. Inspect the rendered UI, console-visible behavior, network/API symptoms if available, and relevant code paths. Then fix the smallest code path that causes the issue.
+
+After the fix:
+- reload the page in the browser
+- verify the bug no longer reproduces
+- check desktop and mobile widths if layout is involved
+- run the relevant lint/typecheck/test commands
+- summarize changed files and verification results
+
+16. Finally fixed the email bug after the prompt in a seperate session
+17. The next suggested step was to implement the scheduled runs, but I chose to focus on scraper. 
+18. using skill beautifulsoup-parsing to plan first the scraper and the criteria search gpt 5.5. medium
+Key prompt: Ok, but I want to focus on the scraper first. Now it does not get any results, because the filters do not match the imot.bg structure. This is the page on this link: https://www.imot.bg/search/prodazhbi And the listing reusults are as follows: https://www.imot.bg/obiavi/prodazhbi/grad-sofiya/lozenets/dvustaen?price_min=100000&price_max=200000 Use $beatofulsoup=parsing to plan how to implement the search properly.
+ Plan  first, implement only after I approve
+
+19. Implement it with 5.4.mini low because I am poor :) iterations...
+20. The search criteria in catalog does not match the imot.bg options, so I must update the catalog. Challange...
+Gave the scraper skill real links to check it. It took all my tokens :( I am poor again
+21. Trying to debug the search criteria why are there no results. Still no live results from the site.... Debugigng in a seperate session. 
+It turns out it does not search the live site, but uses test data. I asked to fix it and it took all my tokens. 
+The challenge was it was using fixtures for test and not live data. 
+22. Maybe change the front end agent to use ## Live web development workflow
+
+For frontend or full-stack web changes:
+
+- Start or verify the local dev server before browser testing.
+- Prefer the Codex in-app browser with `@Browser` for unauthenticated localhost routes.
+- Use `@Chrome` only when the task requires signed-in browser state, cookies, or a real browser profile.
+- Reproduce visible bugs before editing code.
+- Name the exact route, state, and viewport being tested.
+- Make the smallest safe change.
+- Re-test the same route after editing.
+- For layout changes, verify mobile and desktop widths.
+- Run lint, typecheck, and relevant tests before finishing.
+- Summarize changed files, browser verification, and remaining risks.
+
+23. Finally fixed the live scrape
+24. Added a subscribe/unsubsdcribe button 
+25. Plan for schedular gpt 5.5 Medium
+26. Adding a scheduler - interval option and also specific time option 
+27. Challenge: Are you opening the app using your embdedded browser, how did I make you do that exactly? Are you using the sub-agents I created for backend. front-end and full stack development? 
+28. Make the emails prettier as well modern. 
+29. I must check of the filters work properly for romms and squire meters. 
+30. Updated the subagents to open the browser
+31. Created a new hook to clean up the leftover data form hooks. 
+32. [DONE] Maybe it for Sofia only --> done
+33. [TO-DO] Check the filters if they work as intended --> they do but not the house type,  Make sure you do not include garages, and random thibgs like that
+34. [TO-DO] Check the scheduler --. it works, but not new, the same...  it must check the DB if it already sent the links. 
+35. Challenges --> it does not use the sub-agents always, I must tell it exlicitely and there is no log which tools it used. So there must be an audit trail. 
+36. [TO-DO] Make it with users and authentications.
+37. [TO-DO] Maybe extend the app to be able to be as a helper for those who are looking for an apartment, to be able to organize their listings. 
+Add a label to the subsriptions. Maybe add a functionality where a person can look at past run matches and get a plot with the prices.but this maybe later. 
+38. Challenge: Ill-defined agents not only do not help, but are a pain in the ass. 
+39. [DONE] When I click run daily job, the user must know that something is happening with a message: preparing your digest or something like that. 
+40. [DONE] Make the email match the design of the UI. --> done
+41. Added an unsubscribe button from the email but it does work as intended. 
+42. [TO-DO] Make the UI look like a magniying glass and the title to be the Sofia Property Finder
+42

@@ -9,6 +9,7 @@ from html import escape
 from pathlib import Path
 
 from app.config import Settings
+from app.services.auth import OutboundMessage
 from app.services.subscriptions import SubscriptionView
 
 
@@ -266,9 +267,25 @@ class EmailService:
     ) -> EmailDeliveryResult:
         unsubscribe_url = self._build_unsubscribe_url(subscription)
         digest = build_digest(subscription, matches, unsubscribe_url=unsubscribe_url)
-        preview_path = self._write_preview(subscription, digest)
+        return self.send_message(
+            OutboundMessage(
+                to_email=subscription.email,
+                subject=digest.subject,
+                text=digest.text,
+                html=digest.html,
+            ),
+            preview_key=f"{subscription.id}",
+        )
+
+    def send_message(
+        self,
+        message: OutboundMessage,
+        *,
+        preview_key: str,
+    ) -> EmailDeliveryResult:
+        preview_path = self._write_preview(message, preview_key=preview_key)
         if self.settings.email_backend == "smtp":
-            error = self._send_smtp(subscription, digest)
+            error = self._send_smtp(message)
             return EmailDeliveryResult(
                 backend="smtp",
                 output_path=preview_path,
@@ -287,32 +304,31 @@ class EmailService:
 
     def _write_preview(
         self,
-        subscription: SubscriptionView,
-        digest: EmailDigest,
+        message: OutboundMessage,
+        *,
+        preview_key: str,
     ) -> str:
         preview_dir = Path(self.settings.email_preview_dir)
         preview_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
-        filename = f"{timestamp}-{subscription.id}.eml"
+        filename = f"{timestamp}-{preview_key}.eml"
         path = preview_dir / filename
-        message = EmailMessage()
-        message["To"] = subscription.email
-        message["From"] = self.settings.email_from
-        message["Subject"] = digest.subject
-        message.set_content(digest.text)
-        message.add_alternative(digest.html, subtype="html")
-        path.write_text(message.as_string(), encoding="utf-8")
+        email_message = EmailMessage()
+        email_message["To"] = message.to_email
+        email_message["From"] = self.settings.email_from
+        email_message["Subject"] = message.subject
+        email_message.set_content(message.text)
+        email_message.add_alternative(message.html, subtype="html")
+        path.write_text(email_message.as_string(), encoding="utf-8")
         return str(path)
 
-    def _send_smtp(
-        self, subscription: SubscriptionView, digest: EmailDigest
-    ) -> str | None:
-        message = EmailMessage()
-        message["To"] = subscription.email
-        message["From"] = self.settings.email_from
-        message["Subject"] = digest.subject
-        message.set_content(digest.text)
-        message.add_alternative(digest.html, subtype="html")
+    def _send_smtp(self, message: OutboundMessage) -> str | None:
+        email_message = EmailMessage()
+        email_message["To"] = message.to_email
+        email_message["From"] = self.settings.email_from
+        email_message["Subject"] = message.subject
+        email_message.set_content(message.text)
+        email_message.add_alternative(message.html, subtype="html")
 
         try:
             if self.settings.smtp_use_starttls:
@@ -328,7 +344,7 @@ class EmailService:
                             self.settings.smtp_username,
                             self.settings.smtp_password,
                         )
-                    client.send_message(message)
+                    client.send_message(email_message)
                 return None
 
             with smtplib.SMTP_SSL(
@@ -340,7 +356,7 @@ class EmailService:
                         self.settings.smtp_username,
                         self.settings.smtp_password,
                     )
-                client.send_message(message)
+                client.send_message(email_message)
             return None
         except smtplib.SMTPAuthenticationError:
             return (

@@ -1,4 +1,5 @@
-﻿from __future__ import annotations
+# ruff: noqa: E501
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
@@ -30,6 +31,7 @@ class FakeScheduler:
         self,
         func,
         trigger,
+        args,
         id: str,
         max_instances: int,
         replace_existing: bool,
@@ -52,11 +54,13 @@ class DummySettings:
 class DummyConfig:
     def __init__(
         self,
+        user_id: int,
         enabled: bool,
         mode: str,
         interval_minutes: int,
         daily_run_time: str,
     ) -> None:
+        self.user_id = user_id
         self.enabled = enabled
         self.mode = mode
         self.interval_minutes = interval_minutes
@@ -73,9 +77,6 @@ class DummySession:
     def __exit__(self, exc_type, exc, tb) -> None:
         return None
 
-    def get(self, model, key):
-        return self.config
-
 
 class DummySessionFactory:
     def __init__(self, config: DummyConfig) -> None:
@@ -85,32 +86,47 @@ class DummySessionFactory:
         return DummySession(self.config)
 
 
+class DummySchedulerManager(AppScheduler):
+    def _load_enabled_snapshots(self):
+        return [self._load_snapshot(user_id=42)] if self._load_snapshot(user_id=42).enabled else []
+
+    def _load_snapshot(self, *, user_id: int):
+        config = self._session_factory_getter()().config
+        return type("Snapshot", (), {
+            "user_id": config.user_id,
+            "enabled": config.enabled,
+            "mode": config.mode,
+            "interval_minutes": config.interval_minutes,
+            "daily_run_time": config.daily_run_time,
+        })()
+
+
 def test_scheduler_starts_only_when_enabled() -> None:
     fake_scheduler = FakeScheduler()
-    config = DummyConfig(False, "interval", 30, "08:00")
-    manager = AppScheduler(
+    config = DummyConfig(42, False, "interval", 30, "08:00")
+    manager = DummySchedulerManager(
         session_factory_getter=lambda: DummySessionFactory(config),
         settings_getter=lambda: DummySettings(),
-        job_runner=lambda: None,
+        job_runner=lambda user_id: None,
         scheduler_factory=lambda: fake_scheduler,
     )
 
     manager.start()
 
     assert fake_scheduler.started is True
-    assert fake_scheduler.get_job("listing_job") is None
+    assert fake_scheduler.get_job("listing_job_42") is None
 
 
-def test_scheduler_blocks_overlapping_runs() -> None:
+def test_scheduler_blocks_overlapping_runs_per_user() -> None:
     fake_scheduler = FakeScheduler()
-    config = DummyConfig(True, "interval", 30, "08:00")
+    config = DummyConfig(42, True, "interval", 30, "08:00")
     run_count = {"count": 0}
 
-    def runner():
+    def runner(user_id: int):
         run_count["count"] += 1
-        return {"ok": True}
+        return {"ok": True, "user_id": user_id}
 
-    manager = AppScheduler(
+    manager = DummySchedulerManager(
         session_factory_getter=lambda: DummySessionFactory(config),
         settings_getter=lambda: DummySettings(),
         job_runner=runner,
@@ -118,16 +134,18 @@ def test_scheduler_blocks_overlapping_runs() -> None:
     )
 
     manager.start()
-    manager._lock.acquire()
+    manager._acquire_user(42)
     try:
-        acquired, result = manager.run_manual_job()
+        acquired, result = manager.run_manual_job(user_id=42)
     finally:
-        manager._lock.release()
+        manager._release_user(42)
 
-    second_acquired, second_result = manager.run_manual_job()
+    second_acquired, second_result = manager.run_manual_job(user_id=42)
 
     assert acquired is False
     assert result is None
     assert second_acquired is True
-    assert second_result == {"ok": True}
+    assert second_result == {"ok": True, "user_id": 42}
     assert run_count["count"] == 1
+
+

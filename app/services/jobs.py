@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -38,14 +38,19 @@ class JobService:
         provider_name: str,
         listings: list[ListingCandidate],
         email_service: EmailService,
+        *,
+        user_id: int,
     ) -> JobResult:
-        job_run = JobRun(provider=provider_name, status="running")
+        job_run = JobRun(provider=provider_name, status="running", user_id=user_id)
         self.session.add(job_run)
         self.session.flush()
 
         active_subscriptions = list(
             self.session.scalars(
-                select(Subscription).where(Subscription.active.is_(True))
+                select(Subscription).where(
+                    Subscription.active.is_(True),
+                    Subscription.user_id == user_id,
+                )
             )
         )
         subscriptions = [
@@ -73,10 +78,7 @@ class JobService:
             matched_listings = self._load_subscription_matches(subscription.id)
             delivery_result = email_service.deliver(subscription, matched_listings)
             preview_paths.extend(self._record_delivery(delivery_result))
-            if (
-                delivery_result.error
-                and delivery_result.error not in email_errors
-            ):
+            if delivery_result.error and delivery_result.error not in email_errors:
                 email_errors.append(delivery_result.error)
             emails_sent += int(delivery_result.sent)
 
@@ -101,8 +103,13 @@ class JobService:
             email_errors=email_errors,
         )
 
-    def list_recent_job_runs(self, limit: int = 5) -> list[JobRun]:
-        statement = select(JobRun).order_by(JobRun.started_at.desc()).limit(limit)
+    def list_recent_job_runs(self, *, user_id: int, limit: int = 5) -> list[JobRun]:
+        statement = (
+            select(JobRun)
+            .where(JobRun.user_id == user_id)
+            .order_by(JobRun.started_at.desc())
+            .limit(limit)
+        )
         return list(self.session.scalars(statement))
 
     def persist_subscription_preview(
@@ -194,6 +201,8 @@ class JobService:
 def execute_job_run(
     session_factory: Callable[[], Session],
     settings: Settings,
+    *,
+    user_id: int,
 ) -> JobResult:
     with session_factory() as session:
         job_service = JobService(session)
@@ -201,7 +210,10 @@ def execute_job_run(
         subscriptions = [
             to_subscription_view(item)
             for item in session.scalars(
-                select(Subscription).where(Subscription.active.is_(True))
+                select(Subscription).where(
+                    Subscription.active.is_(True),
+                    Subscription.user_id == user_id,
+                )
             )
         ]
         listings = load_listings_for_subscriptions(subscriptions, settings)
@@ -209,4 +221,5 @@ def execute_job_run(
             listing_source_label(settings),
             listings,
             email_service,
+            user_id=user_id,
         )

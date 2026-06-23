@@ -13,12 +13,12 @@ This journal contains raw, verified evidence for the AI-Assisted Development exa
 | Module | Status | Strongest evidence |
 | --- | --- | --- |
 | UI and validation | Complete | `app/main.py`, `app/templates/index.html`, `app/static/app.css`, `app/schemas.py`, `tests/test_app_routes.py` |
-| Database layer | In progress | `app/models.py`, `app/db.py`, `app/services/subscriptions.py` |
+| Database layer | Complete | `app/models.py`, `app/services/auth.py`, `app/services/subscriptions.py`, `app/services/scheduler.py`, `tests/test_app_routes.py` |
 | Listing provider and parsing | Complete | `app/providers/parsers.py`, `app/providers/fixtures.py`, `app/services/listings.py`, `tests/test_fixture_parser.py` |
 | Matching and deduplication | In progress | `app/services/preview.py`, `app/services/jobs.py` |
 | Scheduler | Complete | `app/services/scheduler.py`, `app/main.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py` |
-| Email delivery | In progress | `app/email/delivery.py`, `app/services/jobs.py`, `tests/test_email_digest.py` |
-| Testing and observability | In progress | `tests/conftest.py`, `tests/test_fixture_parser.py`, `tests/test_app_routes.py` |
+| Email delivery | Complete | `app/email/delivery.py`, `app/services/auth.py`, `app/services/jobs.py`, `tests/test_email_digest.py`, `tests/test_app_routes.py` |
+| Testing and observability | Complete | `tests/conftest.py`, `tests/test_app_routes.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py`, `tests/test_email_digest.py` |
 
 ## Development log
 
@@ -389,3 +389,15 @@ un_pytest_clean.ps1 -q` and got `23 passed, 1 warning in 3.06s`. Ran `.\.venv\Sc
 - **Validation:** Ran `\.\venv\Scripts\python -m pytest tests\test_email_digest.py` and got `3 passed in 0.36s`.
 - **Challenges and learning:** Neutral email backgrounds are subtle, but even a small cream tint can dominate the inbox impression when the rest of the design is minimal.
 - **Evidence:** `app/email/delivery.py`, `tests/test_email_digest.py`, `docs/exam-journal.md`
+
+### 2026-06-23 - Authenticated multi-user accounts with per-user scheduler and manual job controls
+
+- **Outcome:** Added private user accounts with email verification, login, logout, password reset, account-owned subscriptions, per-user scheduler settings, and per-user manual job execution. The public dashboard is now an authenticated experience, while the one-click email unsubscribe link still deactivates a saved alert without exposing other user data.
+- **Approach and reasoning:** Kept the existing FastAPI, SQLite, and Jinja2 stack instead of introducing an external auth dependency. Used server-side opaque sessions with HttpOnly cookies, per-session CSRF tokens, and scrypt password hashing from the Python standard library so the MVP stays exam-friendly and locally runnable. The previous global scheduler configuration was refactored into one scheduler row per user so each verified user can choose their own interval without needing an admin role.
+- **AI-assisted workflow:** Codex inspected the public subscription, job, scheduler, and email code paths, then added user/session/token models, a startup schema upgrader for the existing SQLite database, an authentication service, account email messages, ownership checks in the route layer, and a conditional dashboard template for signed-out versus signed-in users. During verification, I corrected two meaningful issues discovered by the tests: SQLite returned naive datetimes for token/session expiry checks, and the reset/verification tests initially parsed the wrong preview email when multiple `.eml` files existed.
+- **AI tool choice:** Codex was used because the change crossed backend persistence, security flows, scheduler architecture, HTML templates, client-side dashboard behavior, and automated tests in one local workspace.
+- **Key prompts:** "/plan Extend the app, so differnet users can register with their email, log in safely based on modern security authentication standards and architecture."; "Implement the plan with one smal cahnge: I want each user to be able to apply the scheduler and the manual job controls. Not only the admin"
+- **Validation:** Ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 tests/test_app_routes.py tests/test_scheduler_routes.py tests/test_scheduler_service.py tests/test_email_digest.py -q` and got `14 passed, 1 warning in 4.35s` after the fixes. Then ran `powershell -ExecutionPolicy Bypass -File .\scripts\run_pytest_clean.ps1 -q` and got `20 passed, 1 warning in 5.63s`. Ran `.\\.venv\\Scripts\\python -m ruff check .` and got `All checks passed!`. The remaining warning is the existing upstream `StarletteDeprecationWarning` from FastAPI's installed test client dependency.
+- **Challenges and learning:** The Windows sandbox blocked the normal patch utility for this workspace, so implementation had to be finished through carefully scoped local file rewrites. TestClient form posts were kept dependency-free by parsing URL-encoded request bodies directly instead of adding `python-multipart`. The previous scheduler table also hard-coded `id = 1`, which caused a per-user insert collision and had to be removed before per-user schedules could work.
+- **Evidence:** `app/models.py`, `app/migrations.py`, `app/services/auth.py`, `app/services/scheduler.py`, `app/services/jobs.py`, `app/services/subscriptions.py`, `app/email/delivery.py`, `app/main.py`, `app/templates/index.html`, `app/templates/reset_password.html`, `app/static/app.css`, `tests/test_app_routes.py`, `tests/test_scheduler_routes.py`, `tests/test_scheduler_service.py`, `tests/test_email_digest.py`, `plans.md`, and the verified command outputs above.
+

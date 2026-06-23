@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
@@ -9,10 +9,11 @@ from app.catalog import (
     TRANSACTION_TYPES,
     canonicalize_district,
 )
+from app.services.auth import normalize_email, validate_password
 
 
 class SubscriptionCreate(BaseModel):
-    email: str
+    email: str | None = None
     transaction_type: str
     property_type: str
     city: str
@@ -24,11 +25,10 @@ class SubscriptionCreate(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def validate_email(cls, value: str) -> str:
-        cleaned = value.strip().lower()
-        if "@" not in cleaned or cleaned.startswith("@") or cleaned.endswith("@"):
-            raise ValueError("Enter a valid email address.")
-        return cleaned
+    def validate_email(cls, value: str | None) -> str | None:
+        if value is None or value == "":
+            return None
+        return normalize_email(value)
 
     @field_validator("transaction_type")
     @classmethod
@@ -93,6 +93,50 @@ class SubscriptionCreate(BaseModel):
         if value is not None and min_price is not None and value < min_price:
             raise ValueError("Maximum price must be greater than minimum price.")
         return value
+
+
+class RegisterForm(BaseModel):
+    email: str
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return normalize_email(value)
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        return validate_password(value)
+
+
+class LoginForm(BaseModel):
+    email: str
+    password: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return normalize_email(value)
+
+
+class PasswordResetRequestForm(BaseModel):
+    email: str
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, value: str) -> str:
+        return normalize_email(value)
+
+
+class PasswordResetForm(BaseModel):
+    token: str
+    password: str
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_value(cls, value: str) -> str:
+        return validate_password(value)
 
 
 class SchedulerConfigUpdate(BaseModel):

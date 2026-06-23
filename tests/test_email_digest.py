@@ -10,6 +10,7 @@ from app.services.subscriptions import SubscriptionView
 def make_subscription() -> SubscriptionView:
     return SubscriptionView(
         id=1,
+        user_id=1,
         email="subscriber@example.com",
         transaction_type="sale",
         property_type="apartment",

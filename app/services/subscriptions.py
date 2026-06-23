@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 from __future__ import annotations
 
 import secrets
@@ -13,6 +14,7 @@ from app.schemas import SubscriptionCreate
 @dataclass(slots=True)
 class SubscriptionView:
     id: int
+    user_id: int | None
     email: str
     transaction_type: str
     property_type: str
@@ -31,9 +33,10 @@ class SubscriptionService:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def create_subscription(self, payload: SubscriptionCreate) -> Subscription:
+    def create_subscription(self, payload: SubscriptionCreate, *, user_id: int, email: str) -> Subscription:
         subscription = Subscription(
-            email=payload.email,
+            user_id=user_id,
+            email=email,
             transaction_type=payload.transaction_type,
             property_type=payload.property_type,
             city=payload.city,
@@ -49,12 +52,16 @@ class SubscriptionService:
         self.session.refresh(subscription)
         return subscription
 
-    def list_subscriptions(self) -> list[Subscription]:
-        statement = select(Subscription).order_by(Subscription.created_at.desc())
+    def list_subscriptions(self, *, user_id: int) -> list[Subscription]:
+        statement = (
+            select(Subscription)
+            .where(Subscription.user_id == user_id)
+            .order_by(Subscription.created_at.desc())
+        )
         return list(self.session.scalars(statement))
 
-    def deactivate_subscription(self, token: str) -> bool:
-        subscription = self._get_subscription(token)
+    def deactivate_subscription(self, token: str, *, user_id: int | None = None) -> bool:
+        subscription = self._get_subscription(token, user_id=user_id)
         if subscription is None:
             return False
         self._remove_subscription_matches(subscription.id)
@@ -62,8 +69,8 @@ class SubscriptionService:
         self.session.commit()
         return True
 
-    def reactivate_subscription(self, token: str) -> Subscription | None:
-        subscription = self._get_subscription(token)
+    def reactivate_subscription(self, token: str, *, user_id: int) -> Subscription | None:
+        subscription = self._get_subscription(token, user_id=user_id)
         if subscription is None:
             return None
         subscription.active = True
@@ -71,8 +78,8 @@ class SubscriptionService:
         self.session.refresh(subscription)
         return subscription
 
-    def delete_subscription(self, token: str) -> bool:
-        subscription = self._get_subscription(token)
+    def delete_subscription(self, token: str, *, user_id: int) -> bool:
+        subscription = self._get_subscription(token, user_id=user_id)
         if subscription is None:
             return False
         self._remove_subscription_matches(subscription.id)
@@ -82,8 +89,10 @@ class SubscriptionService:
         self.session.commit()
         return True
 
-    def _get_subscription(self, token: str) -> Subscription | None:
+    def _get_subscription(self, token: str, *, user_id: int | None) -> Subscription | None:
         statement = select(Subscription).where(Subscription.unsubscribe_token == token)
+        if user_id is not None:
+            statement = statement.where(Subscription.user_id == user_id)
         return self.session.scalar(statement)
 
     def _remove_subscription_matches(self, subscription_id: int) -> None:
@@ -97,9 +106,7 @@ class SubscriptionService:
 
     def _delete_orphan_listings(self) -> None:
         self.session.execute(
-            delete(Listing).where(
-                ~Listing.id.in_(select(ListingMatch.listing_id))
-            )
+            delete(Listing).where(~Listing.id.in_(select(ListingMatch.listing_id)))
         )
 
 
@@ -109,6 +116,7 @@ def to_subscription_view(subscription: Subscription) -> SubscriptionView:
     ]
     return SubscriptionView(
         id=subscription.id,
+        user_id=subscription.user_id,
         email=subscription.email,
         transaction_type=subscription.transaction_type,
         property_type=subscription.property_type,
@@ -122,3 +130,4 @@ def to_subscription_view(subscription: Subscription) -> SubscriptionView:
         active=subscription.active,
         initialized=subscription.initialized,
     )
+

@@ -235,3 +235,15 @@ button:disabled { cursor: wait; opacity: 0.62; }
 }
 
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.auth-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+.auth-panel, .account-panel, .flash-panel { background: #fafafa; box-shadow: 4px 4px 0 rgba(24, 23, 23, 0.05); }
+.auth-panel--single { width: min(100%, 640px); margin: 48px auto; }
+.stack-form { display: grid; gap: 16px; margin-top: 24px; }
+.inline-form { display: inline-flex; }
+.readonly-field input { background: #ecece8; }
+.flash-panel { padding-top: 34px; }
+.account-panel { margin-top: 26px; }
+
+@media (max-width: 1040px) {
+  .auth-grid { grid-template-columns: 1fr; }
+}
